@@ -6,7 +6,7 @@ import {
 import { addProject, deleteProject, fecha, setSettings, useDB, type Project } from './store'
 import { PREGUNTAS, render, specInicial } from './demo.js'
 import { Workspace } from './Workspace'
-import { connect, createSession, disconnect, getConnection, provisionProject, type Connection } from './api'
+import { connect, createSession, disconnect, getConnection, provisionProject, staticDemo, type Connection } from './api'
 import { Estado, folio, Marca } from '@/components/marca'
 import { SelectorTema } from '@/components/tema'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -627,6 +627,8 @@ function Configuracion({ connection, onConnection }: {
           la sesión; nunca se guardan en el navegador.
         </p>
       </div>
+
+      {staticDemo && <Alert className="mb-5"><Sparkles className="size-4" /><AlertDescription>Esta versión pública sirve para recorrer la demostración. La conexión con OpenCode se configura en una instalación propia.</AlertDescription></Alert>}
 
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">

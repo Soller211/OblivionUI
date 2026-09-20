@@ -1,4 +1,5 @@
 export type Connection = { connected: boolean; available?: boolean; provisioning?: boolean; runtime?: boolean; url?: string; version?: string; directory?: string }
+export const staticDemo = import.meta.env.VITE_STATIC_DEMO === 'true'
 
 async function call<T>(path: string, body?: object): Promise<T> {
   const response = await fetch(path, {
@@ -11,9 +12,11 @@ async function call<T>(path: string, body?: object): Promise<T> {
   return data as T
 }
 
-export const getConnection = () => call<Connection>('/api/connection')
+export const getConnection = () => staticDemo
+  ? Promise.resolve<Connection>({ connected: false, available: false, provisioning: false, runtime: false })
+  : call<Connection>('/api/connection')
 export const connect = (input: { accessKey: string; url: string; username: string; password: string }) =>
-  call<Connection>('/api/connect', input)
+  staticDemo ? Promise.reject(new Error('La versión pública es una demostración. Conecta OpenCode en una instalación propia de OblivionUI.')) : call<Connection>('/api/connect', input)
 export const disconnect = () => call<Connection>('/api/disconnect', {})
 export const createSession = (title: string, directory: string) =>
   call<{ id: string; directory: string }>('/api/session', { title, directory })

@@ -7,6 +7,21 @@ de las variables de entorno; la interfaz se llama OblivionUI. El objetivo y el a
 Proyecto abierto bajo licencia [MIT](LICENSE). Requiere Node.js 22 o superior
 para desarrollo local; la imagen Docker usa Node.js 24.
 
+## Demostración pública
+
+El repositorio publica automáticamente una demostración estática en GitHub Pages cuando se
+actualiza `main`. Después de seleccionar **GitHub Actions** como fuente en
+**Settings → Pages** del repositorio, estará disponible en:
+
+```text
+https://soller211.github.io/OblivionUI/
+```
+
+La demostración permite crear y modificar proyectos ilustrativos en el navegador de cada
+visitante. No se conecta a OpenCode, Docker ni comparte proyectos entre personas. Las
+aplicaciones Laravel reales continúan publicándose desde la instalación propia, mediante su
+URL de preview.
+
 ```bash
 npm install
 npm run dev        # frontend en http://localhost:5173
