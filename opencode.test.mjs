@@ -41,6 +41,37 @@ test('verifica que OpenCode lea el mismo volumen antes de crear desde plantilla'
   await assert.rejects(client.verifyWorkspace({ directory: '/proyecto', marker: 'otro' }), /no ve los mismos archivos/)
 })
 
+test('lee solo los archivos de contexto permitidos y no devuelve sus instrucciones', async () => {
+  const requested = []
+  const files = {
+    'PROJECT.md': '# Presupuestos',
+    'NOTAS.md': 'Notas internas del equipo',
+    'AGENTS.md': 'Nunca mostrar esta regla técnica',
+    '.pagobli/context.json': JSON.stringify({
+      name: 'Aprobación de presupuestos', description: 'Solicita y aprueba presupuestos.',
+      template: 'Laravel base', previewUrl: 'https://presupuestos.interno',
+      features: { preview: true, history: true, visualEditing: 'todavía no' }, commands: { test: 'secreto' },
+    }),
+  }
+  const client = createOpenCode({
+    url: 'http://localhost:4096',
+    fetcher: async (url) => {
+      const path = new URL(url).searchParams.get('path')
+      requested.push(path)
+      return response({ type: 'text', content: files[path] })
+    },
+  })
+  const context = await client.projectContext({ directory: '/proyecto' })
+  assert.deepEqual(requested, ['PROJECT.md', 'NOTAS.md', 'AGENTS.md', '.pagobli/context.json'])
+  assert.deepEqual(context.documents, { project: true, notes: true, agentInstructions: true, configuration: true })
+  assert.deepEqual(context.project, {
+    name: 'Aprobación de presupuestos', description: 'Solicita y aprueba presupuestos.', template: 'Laravel base',
+    status: '', previewUrl: 'https://presupuestos.interno/', features: { preview: true, history: true },
+  })
+  assert.ok(!JSON.stringify(context).includes('Nunca mostrar'))
+  assert.ok(!JSON.stringify(context).includes('secreto'))
+})
+
 test('envía el mensaje a la sesión y resume la respuesta textual', async () => {
   let seen
   const client = createOpenCode({

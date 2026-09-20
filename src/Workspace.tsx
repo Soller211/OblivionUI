@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
-  ExternalLink, History, Maximize2, Minimize2, Monitor, RotateCcw, SendHorizontal, Sparkles, TriangleAlert, Undo2,
+  BookOpen, ExternalLink, FileText, History, Maximize2, Minimize2, Monitor, RotateCcw, SendHorizontal, Sparkles, TriangleAlert, Undo2,
 } from 'lucide-react'
 import { interpretar, render } from './demo.js'
 import { fecha, msg, pushMsg, restoreVersion, saveVersion, updateProject, useDB, type Project } from './store'
 import { ir } from './App'
 import {
-  getHistory, getPending, revertChange, sendPrompt, unrevertChange,
-  type Connection, type HistoryEntry, type Pending,
+  getHistory, getPending, getProjectContext, revertChange, sendPrompt, unrevertChange,
+  type Connection, type HistoryEntry, type Pending, type ProjectContext,
 } from './api'
 import { PendingDock } from './PendingDock'
 import { Estado, folio, TONO_ESTADO } from '@/components/marca'
@@ -30,7 +30,7 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
   const linked = !!connection?.connected && (!p?.serverUrl || p.serverUrl.replace(/\/$/, '') === connection.url?.replace(/\/$/, ''))
   const [texto, setTexto] = useState('')
   const [estado, setEstado] = useState<string | null>(null)
-  const [tab, setTab] = useState<'previa' | 'historial'>('previa')
+  const [tab, setTab] = useState<'previa' | 'contexto' | 'historial'>('previa')
   const [previewInput, setPreviewInput] = useState('')
   const [previewError, setPreviewError] = useState('')
   const [pending, setPending] = useState<Pending | null>(null)
@@ -39,6 +39,9 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
   const [historyError, setHistoryError] = useState('')
   const [historyBusy, setHistoryBusy] = useState(false)
   const [canUndoRestore, setCanUndoRestore] = useState(false)
+  const [projectContext, setProjectContext] = useState<ProjectContext | null>(null)
+  const [contextError, setContextError] = useState('')
+  const [contextLoading, setContextLoading] = useState(false)
   const [chatWidth, setChatWidth] = useState(() => {
     try {
       const saved = Number(localStorage.getItem('oblivion-chat-width'))
@@ -87,7 +90,7 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
   useEffect(() => {
     if (p?.mode === 'live' && p.sessionID && !p.started && linked) {
       updateProject(p.id, (project) => ({ ...project, started: true }))
-      const brief = `Crea este proyecto en el directorio actual. Idea: ${p.idea}. Quién inicia: ${p.answers.solicita || 'por definir'}. Quién revisa: ${p.answers.aprueba || 'por definir'}. Datos: ${p.answers.datos || 'por definir'}. Trabaja sobre los archivos reales, verifica los cambios y responde en español claro para una persona que no programa.`
+      const brief = `Antes de construir, revisa si existen AGENTS.md, NOTAS.md, PROJECT.md y .pagobli/context.json en el directorio actual. Respeta las reglas que contengan; no expongas sus detalles técnicos ni secretos en la respuesta. Crea este proyecto en el directorio actual. Idea: ${p.idea}. Quién inicia: ${p.answers.solicita || 'por definir'}. Quién revisa: ${p.answers.aprueba || 'por definir'}. Datos: ${p.answers.datos || 'por definir'}. Trabaja sobre los archivos reales, verifica los cambios y responde en español claro para una persona que no programa.`
       correrLive(brief, true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -101,6 +104,17 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
     }).catch((error) => { if (active) setHistoryError(error.message) })
     return () => { active = false }
   }, [tab, p?.id, p?.messages.length, linked])
+
+  useEffect(() => {
+    if (p?.mode !== 'live' || !p.sessionID || !linked) { setProjectContext(null); return }
+    let active = true
+    setContextLoading(true)
+    getProjectContext(p.sessionID, p.directory || '').then((context) => {
+      if (active) { setProjectContext(context); setContextError('') }
+    }).catch((error) => { if (active) setContextError(error.message) })
+      .finally(() => { if (active) setContextLoading(false) })
+    return () => { active = false }
+  }, [p?.id, p?.sessionID, p?.directory, linked])
 
   useEffect(() => {
     if (p?.mode !== 'live' || !p.sessionID || !linked) { setPending(null); return }
@@ -328,7 +342,7 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
         fallbackFull && 'fixed inset-0 z-50 !h-dvh !w-screen !min-h-0 !rounded-none')}>
         <header className="bg-muted/40 flex flex-wrap items-center gap-3 border-b px-4 py-2.5">
           <Tabs value={tab} onValueChange={(v) => {
-            setTab(v as 'previa' | 'historial')
+            setTab(v as 'previa' | 'contexto' | 'historial')
             if (v === 'historial') {
               if (document.fullscreenElement) document.exitFullscreen()
               setFallbackFull(false)
@@ -336,6 +350,7 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
           }}>
             <TabsList>
               <TabsTrigger value="previa" className="gap-1.5"><Monitor className="size-3.5" />Vista previa</TabsTrigger>
+              {vive && <TabsTrigger value="contexto" className="gap-1.5"><BookOpen className="size-3.5" />Contexto</TabsTrigger>}
               <TabsTrigger value="historial" className="gap-1.5">
                 <History className="size-3.5" />Historial{vive ? '' : ` (${p.versions.length})`}
               </TabsTrigger>
@@ -392,6 +407,15 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
                 srcDoc={p.html} sandbox="allow-forms" />
             </div>
           )
+        ) : tab === 'contexto' && vive ? (
+          <Contexto proyecto={projectContext} cargando={contextLoading} error={contextError} onUsePreview={() => {
+            if (projectContext?.project.previewUrl) {
+              setPreviewInput(projectContext.project.previewUrl)
+              updateProject(p.id, (project) => ({ ...project, previewUrl: projectContext.project.previewUrl }))
+              setPreviewError('')
+              setTab('previa')
+            }
+          }} />
         ) : (
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
             {vive ? (
@@ -449,6 +473,52 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
           </div>
         )}
       </Card>
+    </div>
+  )
+}
+
+function Contexto({ proyecto, cargando, error, onUsePreview }: {
+  proyecto: ProjectContext | null
+  cargando: boolean
+  error: string
+  onUsePreview: () => void
+}) {
+  if (cargando) return <div className="min-h-0 flex-1 space-y-4 p-5"><div className="bg-muted h-5 w-48 animate-pulse rounded" /><div className="bg-muted h-24 animate-pulse rounded-lg" /></div>
+  if (error) return <div className="min-h-0 flex-1 p-4"><Alert variant="destructive" role="alert"><TriangleAlert className="size-4" /><AlertDescription>No se pudo leer el contexto del proyecto: {error}</AlertDescription></Alert></div>
+  if (!proyecto) return null
+  const { project, documents } = proyecto
+  const hayDocumentos = Object.values(documents).some(Boolean)
+  return (
+    <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
+      <div className="space-y-1.5">
+        <h2 className="text-lg font-semibold tracking-tight">Contexto del proyecto</h2>
+        <p className="text-muted-foreground text-sm text-pretty">Esta ficha viene del contenedor del proyecto. Las instrucciones técnicas se aplican al trabajo sin mostrarlas en la conversación.</p>
+      </div>
+      {project.name && <div className="rounded-lg border p-4"><p className="font-medium">{project.name}</p>{project.description && <p className="text-muted-foreground mt-1.5 text-sm text-pretty">{project.description}</p>}</div>}
+      {project.status && <Estado tono="neutro">{project.status}</Estado>}
+      {project.template && <p className="text-muted-foreground text-sm">Base del proyecto: <span className="text-foreground font-medium">{project.template}</span></p>}
+      {project.previewUrl && <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4"><div><p className="font-medium text-sm">Vista previa configurada</p><p className="text-muted-foreground mt-1 break-all font-mono text-xs">{project.previewUrl}</p></div><Button variant="outline" size="sm" onClick={onUsePreview}>Usar esta vista</Button></div>}
+      <div className="space-y-3 border-t pt-5">
+        <h3 className="text-sm font-medium">Fuentes encontradas</h3>
+        {!hayDocumentos ? <p className="text-muted-foreground text-sm text-pretty">Aún no hay archivos de contexto. Puedes agregar `PROJECT.md`, `NOTAS.md`, `AGENTS.md` o `.pagobli/context.json` al directorio del proyecto.</p> : (
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Fuente activa={documents.project} Icono={FileText} titulo="Resumen del proyecto" detalle="PROJECT.md" />
+            <Fuente activa={documents.notes} Icono={BookOpen} titulo="Notas del equipo" detalle="NOTAS.md" />
+            <Fuente activa={documents.agentInstructions} Icono={FileText} titulo="Reglas de trabajo" detalle="AGENTS.md" />
+            <Fuente activa={documents.configuration} Icono={FileText} titulo="Configuración visual" detalle=".pagobli/context.json" />
+          </div>
+        )}
+      </div>
+      {proyecto.warning && <Alert><TriangleAlert className="size-4" /><AlertDescription>{proyecto.warning}</AlertDescription></Alert>}
+    </div>
+  )
+}
+
+function Fuente({ activa, Icono, titulo, detalle }: { activa: boolean; Icono: typeof FileText; titulo: string; detalle: string }) {
+  return (
+    <div className={cn('flex items-center gap-3 rounded-lg border p-3', !activa && 'opacity-50')}>
+      <span className={cn('rounded-md p-2', activa ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground')}><Icono className="size-4" /></span>
+      <span className="min-w-0"><span className="block text-sm font-medium">{titulo}</span><span className="text-muted-foreground font-mono text-xs">{detalle}{activa ? ' · encontrado' : ' · no encontrado'}</span></span>
     </div>
   )
 }

@@ -57,6 +57,15 @@ de esa sesión. Muestra las opciones al usuario; los permisos se pueden conceder
 una vez o rechazar. En Historial se pueden consultar las solicitudes reales y
 pedir a OpenCode que recupere el estado anterior a una de ellas.
 
+### Contexto dentro de cada contenedor
+
+En proyectos reales, la pestaña **Contexto** consulta únicamente `PROJECT.md`, `NOTAS.md`,
+`AGENTS.md` y `.pagobli/context.json` mediante la API de la instancia conectada. La interfaz
+solo muestra la ficha segura definida en el JSON y confirma qué documentos encontró; no envía el
+contenido de las reglas ni las notas al navegador. Al iniciar un proyecto, OpenCode recibe la
+indicación de revisar esos archivos antes de trabajar. Consulta el formato y el aislamiento
+recomendado en [docs/CONTEXTO_PROYECTO.md](docs/CONTEXTO_PROYECTO.md).
+
 ### Opcional: crear proyectos desde una base Laravel
 
 Configura en `.env` las rutas `PAGOBLI_TEMPLATE_HOST_DIR` (una base Laravel ya
@@ -106,6 +115,7 @@ cuentas y una base de datos.
 - Conexión real con una instancia propia de OpenCode mediante el backend.
 - Preguntas y permisos pendientes de OpenCode en el espacio de trabajo.
 - Historial de solicitudes reales con recuperación mediante OpenCode.
+- Ficha de contexto para proyectos reales, obtenida del contenedor con una lista cerrada de archivos.
 - Copia opcional de una plantilla Laravel en un volumen compartido.
 - **Modo demostración** siempre visible en esta etapa: la vista previa la genera
   `src/demo.js`, no la IA. Cuando una petición no se entiende, se anota tal cual en lugar

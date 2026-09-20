@@ -122,6 +122,11 @@ async function api(req, res, pathname) {
     const result = await connection.client.prompt({ sessionID: match[1], directory: body.directory || connection.directory, text: body.text.trim() })
     return send(res, 200, result)
   }
+  const context = pathname.match(/^\/api\/session\/([a-zA-Z0-9_-]+)\/context$/)
+  if (context && req.method === 'GET') {
+    const directory = new URL(req.url, 'http://localhost').searchParams.get('directory') || connection.directory
+    return send(res, 200, await connection.client.projectContext({ directory }))
+  }
   const pending = pathname.match(/^\/api\/session\/([a-zA-Z0-9_-]+)\/pending$/)
   if (pending && req.method === 'GET') {
     const directory = new URL(req.url, 'http://localhost').searchParams.get('directory') || connection.directory

@@ -26,6 +26,16 @@ test('el backend conecta, crea una sesión y envía un mensaje real por la API',
     res.setHeader('Content-Type', 'application/json')
     if (req.url === '/global/health') return res.end(JSON.stringify({ healthy: true, version: '1.0' }))
     if (req.url === '/path') return res.end(JSON.stringify({ directory: '/proyecto' }))
+    if (req.url?.startsWith('/file/content?') && new URL(req.url, 'http://localhost').searchParams.get('directory') === '/proyecto') {
+      const files = {
+        'PROJECT.md': '# Presupuestos',
+        'NOTAS.md': 'Notas de negocio',
+        'AGENTS.md': 'Instrucción privada',
+        '.pagobli/context.json': JSON.stringify({ name: 'Presupuestos', description: 'Flujo de aprobación', template: 'Laravel', commands: { test: 'no mostrar' } }),
+      }
+      const path = new URL(req.url, 'http://localhost').searchParams.get('path')
+      if (files[path]) return res.end(JSON.stringify({ type: 'text', content: files[path] }))
+    }
     if (req.url === '/session?directory=%2Fproyecto') return res.end(JSON.stringify({ id: 'ses_1', directory: '/proyecto' }))
     if (req.method === 'POST' && req.url.startsWith('/session?directory=%2Fremote%2F')) return res.end(JSON.stringify({ id: 'ses_nuevo', directory: new URL(req.url, 'http://localhost').searchParams.get('directory') }))
     if (req.url.startsWith('/file/content?path=.pagobli-workspace-id&directory=%2Fremote%2F')) {
@@ -80,6 +90,11 @@ test('el backend conecta, crea una sesión y envía un mensaje real por la API',
     const promptResponse = await post('/api/session/ses_1/message', { directory: '/proyecto', text: 'Crea un formulario' }, cookie)
     assert.equal(promptResponse.status, 200)
     assert.equal((await promptResponse.json()).answer, 'Formulario creado.')
+    const context = await (await fetch(base + '/api/session/ses_1/context?directory=%2Fproyecto', { headers: { Cookie: cookie } })).json()
+    assert.equal(context.project.name, 'Presupuestos')
+    assert.equal(context.documents.agentInstructions, true)
+    assert.ok(!JSON.stringify(context).includes('Instrucción privada'))
+    assert.ok(!JSON.stringify(context).includes('no mostrar'))
     const pending = await (await fetch(base + '/api/session/ses_1/pending?directory=%2Fproyecto', { headers: { Cookie: cookie } })).json()
     assert.equal(pending.permissions[0].id, 'per_1')
     assert.equal(pending.questions[0].id, 'que_1')

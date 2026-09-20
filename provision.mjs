@@ -47,6 +47,19 @@ export async function provisionProject(name, config) {
       },
     })
     await writeFile(join(localDirectory, '.pagobli-workspace-id'), marker, { flag: 'wx', mode: 0o600 })
+    const contextDirectory = join(localDirectory, '.pagobli')
+    const contextFile = join(contextDirectory, 'context.json')
+    await mkdir(contextDirectory, { recursive: true })
+    try {
+      await writeFile(contextFile, `${JSON.stringify({
+        name: String(name).trim(),
+        description: '',
+        status: 'Por definir',
+        features: { preview: false, history: true, visualEditing: false },
+      }, null, 2)}\n`, { flag: 'wx', mode: 0o600 })
+    } catch (error) {
+      if (error?.code !== 'EEXIST') throw error
+    }
     return { localDirectory, directory, folder, marker }
   } catch (error) {
     await rm(localDirectory, { recursive: true, force: true })

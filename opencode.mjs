@@ -45,6 +45,24 @@ export function createOpenCode({ url, username = 'opencode', password = '', fetc
     return data
   }
 
+  async function readProjectFile(directory, path) {
+    try {
+      const file = await request('GET', `/file/content?path=${encodeURIComponent(path)}`, { directory })
+      return file?.type === 'text' && typeof file.content === 'string' ? file.content : null
+    } catch (error) {
+      if (error.upstreamStatus === 404) return null
+      throw error
+    }
+  }
+
+  const text = (value, max = 600) => typeof value === 'string' ? value.trim().slice(0, max) : ''
+  const httpUrl = (value) => {
+    try {
+      const url = new URL(value)
+      return ['http:', 'https:'].includes(url.protocol) ? url.href : ''
+    } catch { return '' }
+  }
+
   return {
     async check() {
       const health = await request('GET', '/global/health')
@@ -67,6 +85,43 @@ export function createOpenCode({ url, username = 'opencode', password = '', fetc
         throw new OpenCodeError('OpenCode no ve los mismos archivos que PagObli en este directorio. Revisa los volúmenes compartidos.', 409)
       }
       return true
+    },
+    async projectContext({ directory }) {
+      const [project, notes, agents, rawConfig] = await Promise.all([
+        readProjectFile(directory, 'PROJECT.md'),
+        readProjectFile(directory, 'NOTAS.md'),
+        readProjectFile(directory, 'AGENTS.md'),
+        readProjectFile(directory, '.pagobli/context.json'),
+      ])
+      let config = {}
+      let configError = ''
+      if (rawConfig) {
+        try {
+          const parsed = JSON.parse(rawConfig)
+          if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') throw new Error()
+          config = parsed
+        } catch { configError = 'El archivo de contexto no contiene JSON válido.' }
+      }
+      const features = config.features && typeof config.features === 'object' && !Array.isArray(config.features)
+        ? Object.fromEntries(['preview', 'history', 'visualEditing'].filter((key) => typeof config.features[key] === 'boolean').map((key) => [key, config.features[key]]))
+        : {}
+      return {
+        project: {
+          name: text(config.name || config.title, 120),
+          description: text(config.description || config.summary, 800),
+          template: text(config.template, 120),
+          status: text(config.status, 80),
+          previewUrl: httpUrl(config.previewUrl),
+          features,
+        },
+        documents: {
+          project: !!project,
+          notes: !!notes,
+          agentInstructions: !!agents,
+          configuration: !!rawConfig,
+        },
+        ...(configError ? { warning: configError } : {}),
+      }
     },
     async prompt({ sessionID, directory, text }) {
       if (!/^[a-zA-Z0-9_-]+$/.test(sessionID)) throw new OpenCodeError('Sesión no válida.', 400)

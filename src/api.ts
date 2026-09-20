@@ -22,6 +22,21 @@ export const provisionProject = (title: string) =>
 export const sendPrompt = (sessionID: string, directory: string, text: string) =>
   call<{ answer: string }>(`/api/session/${encodeURIComponent(sessionID)}/message`, { directory, text })
 
+export type ProjectContext = {
+  project: {
+    name: string
+    description: string
+    template: string
+    status: string
+    previewUrl: string
+    features: Record<'preview' | 'history' | 'visualEditing', boolean>
+  }
+  documents: { project: boolean; notes: boolean; agentInstructions: boolean; configuration: boolean }
+  warning?: string
+}
+export const getProjectContext = (sessionID: string, directory: string) =>
+  call<ProjectContext>(`/api/session/${encodeURIComponent(sessionID)}/context?directory=${encodeURIComponent(directory)}`)
+
 export type Pending = {
   supported: boolean
   permissions: { id: string; sessionID: string; permission: string; patterns: string[]; metadata?: Record<string, unknown> }[]

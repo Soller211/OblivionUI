@@ -22,7 +22,10 @@ test('crea un proyecto aislado desde plantilla sin copiar secretos ni dependenci
     assert.equal(project.directory, `/remote/projects/${project.folder}`)
     assert.equal(await readFile(join(project.localDirectory, 'artisan'), 'utf8'), 'laravel')
     assert.equal(await readFile(join(project.localDirectory, '.pagobli-workspace-id'), 'utf8'), project.marker)
-    assert.deepEqual((await readdir(project.localDirectory)).sort(), ['.env.example', '.pagobli-workspace-id', 'artisan'])
+    assert.deepEqual((await readdir(project.localDirectory)).sort(), ['.env.example', '.pagobli', '.pagobli-workspace-id', 'artisan'])
+    assert.deepEqual(JSON.parse(await readFile(join(project.localDirectory, '.pagobli', 'context.json'), 'utf8')), {
+      name: 'Gestión de Órdenes', description: '', status: 'Por definir', features: { preview: false, history: true, visualEditing: false },
+    })
     await removeProvisionedProject(project.localDirectory, config)
     assert.deepEqual(await readdir(workspaceRoot), [])
   } finally { await rm(base, { recursive: true, force: true }) }
