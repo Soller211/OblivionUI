@@ -60,6 +60,7 @@ Capacidades actuales, todas ya implementadas y que el rediseño debe preservar:
 - Cola de pendientes: OpenCode solicita permisos (editar archivos, ejecutar comandos, salir
   del proyecto, red) y hace preguntas de opción múltiple; el usuario responde sin salir del
   espacio de trabajo. Se consulta por sondeo cada 2.5 s.
+- Cuentas, espacios y roles: propietario, administrador e integrante.
 - Configuración de administrador: clave de la instalación, URL de OpenCode, usuario y
   contraseña, aprovisionamiento desde plantilla o directorio existente, desconexión.
 - Con configuración opcional de runtime: al crear desde plantilla, inicia el Docker Compose del
@@ -75,11 +76,11 @@ Restricciones técnicas:
 - Estado en `localStorage` del navegador; el servidor Node (`server.mjs`) guarda las
   credenciales solo en memoria durante la sesión.
 - Enrutado por hash, sin router.
-- Sin backend multiusuario: no hay cuentas, roles ni permisos por persona todavía.
+- Cuentas locales con espacios y roles; las fichas de proyectos siguen en `localStorage`, separadas por cuenta y espacio.
 
-Decisiones abiertas, que no deben darse por hechas: autenticación de usuarios y roles,
+Decisiones abiertas, que no deben darse por hechas: SSO o recuperación de cuentas,
 publicación de proyectos terminados, edición visual sobre la vista previa, almacenamiento
-persistente en servidor.
+persistente y compartido de proyectos en servidor.
 
 ## Brand Commitments
 

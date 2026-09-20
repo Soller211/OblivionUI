@@ -6,7 +6,7 @@ import {
 import { addProject, deleteProject, fecha, setScope, setSettings, useDB, type Project } from './store'
 import { PREGUNTAS, render, specInicial } from './demo.js'
 import { Workspace } from './Workspace'
-import { addWorkspaceMember, connect, createSession, createWorkspace, disconnect, getConnection, getIdentity, login, logout, provisionProject, selectWorkspace, staticDemo, type Connection, type Identity } from './api'
+import { addWorkspaceMember, connect, createSession, createWorkspace, disconnect, getConnection, getIdentity, login, logout, provisionProject, selectWorkspace, type Connection, type Identity } from './api'
 import { Estado, folio, Marca } from '@/components/marca'
 import { SelectorTema } from '@/components/tema'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -693,7 +693,6 @@ function Configuracion({ connection, onConnection, identity, onIdentity }: {
         </p>
       </div>
 
-      {staticDemo && <Alert className="mb-5"><Sparkles className="size-4" /><AlertDescription>Esta versión pública sirve para recorrer la demostración. La conexión con OpenCode se configura en una instalación propia.</AlertDescription></Alert>}
 
       {identity.enabled && <Card className="mb-5"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><Building2 className="size-4" />Espacio de trabajo</CardTitle><CardDescription>{identity.workspace?.name} · rol: {identity.workspace?.role === 'owner' ? 'propietario' : identity.workspace?.role}</CardDescription></CardHeader><CardContent><form className="flex gap-3" onSubmit={async (event) => { event.preventDefault(); setWorkspaceError(''); try { const result = await createWorkspace(workspaceName); setWorkspaceName(''); await onIdentity({ ...identity, workspace: result.workspace, workspaces: result.workspaces }) } catch (cause) { setWorkspaceError((cause as Error).message) } }}><Input value={workspaceName} onChange={(event) => setWorkspaceName(event.target.value)} placeholder="Nuevo espacio, ej. Operaciones" /><Button type="submit" variant="outline">Crear</Button></form>{workspaceError && <p className="text-destructive mt-2 text-sm">{workspaceError}</p>}<p className="text-muted-foreground mt-3 text-xs">Los proyectos y la conexión se separan por espacio y por cuenta.</p>{identity.workspace?.role === 'owner' && <form className="mt-5 space-y-3 border-t pt-5" onSubmit={async (event) => { event.preventDefault(); setMemberResult(''); try { await addWorkspaceMember(identity.workspace!.id, { name: memberName, email: memberEmail, password: memberPassword, role: memberRole }); setMemberName(''); setMemberEmail(''); setMemberPassword(''); setMemberResult('Cuenta creada. Comparte el correo y la contraseña inicial de forma segura.') } catch (cause) { setMemberResult((cause as Error).message) } }}><p className="text-sm font-medium">Añadir integrante</p><div className="grid gap-3 sm:grid-cols-2"><Input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="Nombre" required /><Input type="email" value={memberEmail} onChange={(event) => setMemberEmail(event.target.value)} placeholder="correo@empresa.mx" required /></div><div className="flex gap-3"><Input type="password" autoComplete="new-password" minLength={12} value={memberPassword} onChange={(event) => setMemberPassword(event.target.value)} placeholder="Contraseña inicial (12 caracteres)" required /><select value={memberRole} onChange={(event) => setMemberRole(event.target.value as 'admin' | 'member')} className="bg-background rounded-md border px-2 text-sm"><option value="member">Integrante</option><option value="admin">Administrador</option></select><Button type="submit" variant="outline">Añadir</Button></div>{memberResult && <p className="text-muted-foreground text-xs">{memberResult}</p>}</form>}</CardContent></Card>}
 
@@ -757,8 +756,9 @@ function Configuracion({ connection, onConnection, identity, onIdentity }: {
               : 'Se usará un directorio que ya exista en OpenCode. El administrador puede habilitar una plantilla con un volumen compartido.'}
           </p>
 
+          {identity.workspace?.role === 'member' && <Alert><ShieldAlert className="size-4" /><AlertDescription>Solo una persona propietaria o administradora puede cambiar esta conexión.</AlertDescription></Alert>}
           <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={probar} disabled={!settings.url || !accessKey || probando} className="gap-1.5">
+            <Button onClick={probar} disabled={!settings.url || !accessKey || probando || identity.workspace?.role === 'member'} className="gap-1.5">
               <Plug className="size-4" />{probando ? 'Conectando…' : 'Conectar OpenCode'}
             </Button>
             {connection?.connected && <Button variant="outline" onClick={salir}>Desconectar</Button>}

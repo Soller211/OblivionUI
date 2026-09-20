@@ -122,6 +122,13 @@ test('el backend conecta, crea una sesión y envía un mensaje real por la API',
     const isolatedConnection = await fetch(base + '/api/connection', { headers: { Cookie: cookie } })
     assert.equal(isolatedConnection.status, 200)
     assert.equal((await isolatedConnection.json()).connected, false)
+    const workspace = (await createdWorkspace.json()).workspace
+    const memberCreated = await post(`/api/workspaces/${workspace.id}/members`, { name: 'Luis', email: 'luis@empresa.mx', password: 'contraseña-larga-456', role: 'member' }, authCookie)
+    assert.equal(memberCreated.status, 201)
+    const memberLogin = await post('/api/auth/login', { email: 'luis@empresa.mx', password: 'contraseña-larga-456' })
+    const memberCookie = memberLogin.headers.get('set-cookie').split(';')[0]
+    const memberConnection = await post('/api/connect', { accessKey: 'clave-de-prueba', url: `http://127.0.0.1:${upstream.address().port}` }, memberCookie)
+    assert.equal(memberConnection.status, 403)
   } finally {
     child.kill()
     await new Promise((resolve) => upstream.close(resolve))

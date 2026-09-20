@@ -75,5 +75,6 @@ Implementado el primer alcance y la conexión real con OpenCode (React + TypeScr
 backend Node, Docker). La interfaz se llama ahora **OblivionUI** y está construida con
 Tailwind CSS v4, shadcn/ui y `motion`, con identidad morada y tema claro/oscuro que sigue al
 sistema. `PagObli` queda como nombre del repositorio y prefijo de las variables de entorno.
-Ver `README.md`, `PRODUCT.md` y `docs/EJECUCION_DE_PROYECTOS.md`. Los datos de la aplicación siguen en el `localStorage` del
-navegador; una instalación para varios usuarios necesitará cuentas y base de datos.
+Ver `README.md`, `PRODUCT.md` y `docs/`. Ya existen cuentas, roles y espacios de trabajo; las
+fichas de proyectos, mensajes y versiones siguen en el `localStorage` de cada navegador, separados
+por cuenta y espacio. La persistencia compartida en servidor sigue pendiente.

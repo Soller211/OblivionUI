@@ -1,189 +1,64 @@
 # OblivionUI
 
-**OblivionUI** es la plataforma visual para que personas sin perfil técnico creen proyectos
-describiéndolos con palabras de negocio. `PagObli` es el nombre del repositorio y el prefijo
-de las variables de entorno; la interfaz se llama OblivionUI. El objetivo y el alcance están en [NOTAS.md](NOTAS.md).
+OblivionUI es una interfaz para que personas de negocio creen y revisen proyectos sin usar la
+interfaz técnica de OpenCode. La instalación vive en la infraestructura de cada organización:
+OpenCode, el modelo local, los proyectos Laravel y sus contenedores no salen de su servidor.
 
-Proyecto abierto bajo licencia [MIT](LICENSE). Requiere Node.js 22 o superior
-para desarrollo local; la imagen Docker usa Node.js 24.
+`PagObli` es el nombre histórico del repositorio y el prefijo de las variables de entorno.
 
-## Demostración pública
+## Empieza aquí
 
-El repositorio publica automáticamente una demostración estática en GitHub Pages cuando se
-actualiza `main`. Después de seleccionar **GitHub Actions** como fuente en
-**Settings → Pages** del repositorio, estará disponible en:
+| Si eres… | Lee… |
+| --- | --- |
+| Persona de proyectos o dirección | [Guía de uso](docs/GUIA_DE_USO.md) |
+| Administrador de la instalación | [Instalación y operación](docs/INSTALACION_Y_OPERACION.md) |
+| Persona que mantiene o integra el código | [Arquitectura e integración](docs/ARQUITECTURA.md) |
+| Persona que resuelve una incidencia | [Problemas comunes](docs/PROBLEMAS_COMUNES.md) |
 
-```text
-https://soller211.github.io/OblivionUI/
+Documentación específica:
+
+- [Contexto seguro de cada proyecto](docs/CONTEXTO_PROYECTO.md)
+- [Ejecución de previews con Docker Compose](docs/EJECUCION_DE_PROYECTOS.md)
+- [Objetivo y alcance del producto](NOTAS.md)
+- [Decisiones de interfaz](DESIGN.md)
+
+## Instalación rápida con Docker
+
+```bash
+cp .env.example .env
+# Edita PAGOBLI_ACCESS_KEY y PAGOBLI_ADMIN_*.
+docker compose up --build -d
 ```
 
-La demostración permite crear y modificar proyectos ilustrativos en el navegador de cada
-visitante. No se conecta a OpenCode, Docker ni comparte proyectos entre personas. Las
-aplicaciones Laravel reales continúan publicándose desde la instalación propia, mediante su
-URL de preview.
+Abre `http://localhost:8080` e inicia sesión con la cuenta administradora definida en `.env`.
+La guía de operación explica cómo conectar OpenCode, preparar una plantilla Laravel y habilitar
+previews por proyecto.
+
+## Desarrollo local
+
+Requiere Node.js 22 o superior; la imagen Docker usa Node.js 24.
 
 ```bash
 npm install
 npm run dev        # frontend en http://localhost:5173
-npm test           # pruebas unitarias
+PAGOBLI_ACCESS_KEY=una-clave-larga npm start  # API en http://localhost:8080
+npm test
 npm run typecheck
 npm run build
-PAGOBLI_ACCESS_KEY=una-clave-larga npm start  # API y frontend en http://localhost:8080
 ```
 
-Para desarrollo, ejecuta `npm start` y `npm run dev` en dos terminales. Vite envía
-las peticiones `/api` al backend del puerto 8080.
+En desarrollo, Vite reenvía `/api` al backend del puerto 8080. Para activar cuentas locales,
+define también `PAGOBLI_ADMIN_EMAIL` y `PAGOBLI_ADMIN_PASSWORD` antes de iniciar el backend.
 
-## Docker
+## Estado actual
 
-```bash
-cp .env.example .env
-# Edita PAGOBLI_ACCESS_KEY y las variables PAGOBLI_ADMIN_* con valores propios.
-docker compose up --build -d
-```
+- Cuentas, roles y espacios de trabajo.
+- Proyectos de demostración y proyectos reales conectados a OpenCode.
+- Creación opcional desde una plantilla Laravel y runtime Docker Compose por proyecto.
+- Contexto seguro desde archivos del proyecto, preguntas, permisos e historial de OpenCode.
 
-La interfaz queda en `http://localhost:8080` y el contenedor expone
-`GET /health` para comprobar su estado. El Dockerfile ejecuta la comprobación de
-tipos, las pruebas unitarias y la compilación antes de crear la imagen final.
-La imagen final sirve el frontend y la API de conexión con OpenCode mediante un
-proceso sin privilegios. Para detenerla: `docker compose down`.
+Las fichas, conversación y versiones del proyecto se guardan por ahora en el navegador de cada
+persona, separados por cuenta y espacio. La cuenta, los espacios y los roles se conservan en el
+volumen Docker. La persistencia compartida de proyectos es el siguiente bloque de producto.
 
-## Conectar OpenCode
-
-1. Ten una instancia de OpenCode accesible desde **el contenedor de PagObli**.
-   La API HTTP documentada se inicia con `opencode serve --hostname 0.0.0.0 --port 4096`.
-   Si OpenCode está en el host, prueba `http://host.docker.internal:4096` en la
-   pantalla de Configuración. `localhost` dentro del contenedor se refiere a
-   PagObli, no al host.
-2. Inicia sesión con la cuenta administradora configurada por `PAGOBLI_ADMIN_EMAIL` y `PAGOBLI_ADMIN_PASSWORD`. En Configuración puedes crear espacios de trabajo, añadir integrantes y conectar OpenCode. Introduce la dirección, la clave `PAGOBLI_ACCESS_KEY` y,
-   si protegiste OpenCode con autenticación básica, su usuario y contraseña.
-   La contraseña de OpenCode se guarda solo en memoria del backend durante la
-   sesión; no se escribe en `localStorage` ni en un archivo.
-3. Crea un proyecto. PagObli crea una sesión de OpenCode en el directorio de
-   trabajo de la instancia. En las opciones avanzadas puedes elegir otro
-   directorio **ya existente**; PagObli comprueba que OpenCode realmente cree
-   la sesión allí antes de enviar instrucciones.
-4. Escribe cambios en el espacio de trabajo. Los mensajes se envían a OpenCode
-   y se muestra su respuesta en lenguaje natural. Si tu aplicación ya se está
-   ejecutando, agrega su URL para mostrarla como vista previa.
-
-Mientras OpenCode trabaja, PagObli consulta las preguntas y solicitudes de permiso
-de esa sesión. Muestra las opciones al usuario; los permisos se pueden conceder
-una vez o rechazar. En Historial se pueden consultar las solicitudes reales y
-pedir a OpenCode que recupere el estado anterior a una de ellas.
-
-### Contexto dentro de cada contenedor
-
-En proyectos reales, la pestaña **Contexto** consulta únicamente `PROJECT.md`, `NOTAS.md`,
-`AGENTS.md` y `.pagobli/context.json` mediante la API de la instancia conectada. La interfaz
-solo muestra la ficha segura definida en el JSON y confirma qué documentos encontró; no envía el
-contenido de las reglas ni las notas al navegador. Al iniciar un proyecto, OpenCode recibe la
-indicación de revisar esos archivos antes de trabajar. Consulta el formato y el aislamiento
-recomendado en [docs/CONTEXTO_PROYECTO.md](docs/CONTEXTO_PROYECTO.md).
-
-### Opcional: crear proyectos desde una base Laravel
-
-Configura en `.env` las rutas `PAGOBLI_TEMPLATE_HOST_DIR` (una base Laravel ya
-existente) y `PAGOBLI_WORKSPACE_HOST_DIR` (carpeta donde se copiarán los proyectos).
-La carpeta de proyectos debe ser escribible por el usuario del contenedor. Luego:
-
-```bash
-docker compose -f compose.yaml -f compose.provision.yaml up --build -d
-```
-
-OpenCode también debe ver **el mismo volumen de proyectos**. Móntalo en OpenCode
-en `/workspaces` o configura `PAGOBLI_OPENCODE_WORKSPACE_ROOT` con la ruta bajo
-la cual lo ve OpenCode. PagObli copia la plantilla a una carpeta nueva, evita
-copiar `.env`, `vendor`, `node_modules` y `.git`, y comprueba por la API que
-OpenCode lee los mismos archivos antes de enviarle el proyecto. Si la
-comprobación falla, elimina la copia recién creada. Esta opción prepara archivos
-y sesión. Si agregas `compose.runtime.yaml`, también puede levantar el Compose de cada proyecto,
-esperar sus health checks y asignar una URL de vista previa. Consulta la configuración completa
-en [docs/EJECUCION_DE_PROYECTOS.md](docs/EJECUCION_DE_PROYECTOS.md).
-
-Esta conexión usa la API HTTP de OpenCode descrita en
-[su documentación](https://dev.opencode.ai/docs/server/). Las cuentas se activan al definir
-`PAGOBLI_ADMIN_EMAIL` y `PAGOBLI_ADMIN_PASSWORD` antes del primer arranque. La contraseña
-se deriva con `scrypt`; la ficha de usuarios queda en el volumen Docker `pagobli-data`. Cada
-cuenta entra en sus espacios de trabajo y la conexión de OpenCode se vincula a esa cuenta y
-espacio durante su sesión. Aún faltan streaming de avances y persistencia compartida de proyectos. El inicio automático de contenedores requiere la configuración opcional
-descrita arriba y debe validarse con la plantilla Laravel de cada instalación. Si una versión de OpenCode no expone preguntas o
-permisos por su API, PagObli lo señala y esa decisión debe resolverse en
-OpenCode.
-
-La clave de instalación protege las operaciones del backend; usa HTTPS si
-accedes a PagObli u OpenCode desde otra máquina.
-
-Los metadatos y conversaciones de PagObli todavía se guardan en el `localStorage`
-de cada navegador, separado por cuenta y espacio. Las sesiones y el código reales los conserva la instancia de
-OpenCode en su entorno. Al reiniciar PagObli hay que volver a conectar OpenCode;
-no se guardan credenciales. Una instalación para varios usuarios necesitará
-cuentas y una base de datos.
-
-## Qué incluye hoy (primer alcance)
-
-- Lista de proyectos con folio, estado y último movimiento.
-- Pantalla inicial con ejemplos editables para comenzar un proyecto.
-- Alta en dos pasos: la idea, y un bloque de responsables (solicita / autoriza / datos).
-- Espacio de trabajo: conversación y vista previa, con paneles ajustables en escritorio y opción
-  para ampliar el resultado a pantalla completa.
-- Estados de la demostración diferenciados de los proyectos reales; una vista ilustrativa nunca
-  se presenta como aplicación verificada.
-- Historial de versiones: recuperar una versión crea una nueva entrada, conservando las anteriores.
-- Cuentas con inicio de sesión, roles de propietario / administrador / integrante y espacios de trabajo.
-- Conexión real con una instancia propia de OpenCode mediante el backend, aislada por cuenta y espacio.
-- Preguntas y permisos pendientes de OpenCode en el espacio de trabajo.
-- Historial de solicitudes reales con recuperación mediante OpenCode.
-- Ficha de contexto para proyectos reales, obtenida del contenedor con una lista cerrada de archivos.
-- Copia opcional de una plantilla Laravel en un volumen compartido.
-- Inicio opcional de Docker Compose por proyecto, con health check y URL de preview automática.
-- **Modo demostración** siempre visible en esta etapa: la vista previa la genera
-  `src/demo.js`, no la IA. Cuando una petición no se entiende, se anota tal cual en lugar
-  de fingir que se construyó. La idea inicial orienta la vista ilustrativa.
-
-Los proyectos de demostración siguen separados de los proyectos conectados a OpenCode.
-
-## Qué falta (etapas posteriores de NOTAS.md)
-
-Persistencia compartida de proyectos, edición visual sobre la vista previa y publicación.
-
-## Diseño
-
-Interfaz construida con **Tailwind CSS v4 + shadcn/ui (Radix) + motion**, con identidad
-morada propia de OblivionUI en OKLch y tema claro/oscuro que sigue al sistema operativo
-(con interruptor que recuerda la elección). Las tipografías Geist y Geist Mono se sirven
-auto-hospedadas: nada se pide a una CDN externa.
-
-Colores con significado, no decorativos:
-
-| Tono | Significado |
-| --- | --- |
-| Violeta (marca) | Acción principal, selección, foco y proyecto real |
-| Rosa apagado | Demostración: no se ejecuta código real |
-| Ámbar | Retenido: OpenCode espera una autorización o una respuesta |
-| Verde | Verificado y listo para revisar |
-
-Los componentes de `src/components/ui/` vienen de shadcn/ui y se pueden actualizar con
-`npx shadcn@latest add <componente>`. El sistema completo —paleta OKLch, tipografía, forma, espacio, movimiento y componentes—
-está documentado en [`DESIGN.md`](DESIGN.md). La verdad de producto está en
-[`PRODUCT.md`](PRODUCT.md) y la estrategia de esta interfaz en
-`.impeccable/surfaces/src-app-tsx.md`.
-
-## Archivos
-
-| Archivo | Para qué |
-| --- | --- |
-| `src/App.tsx` | Rutas (hash), lista de proyectos, alta, configuración |
-| `src/Workspace.tsx` | Conversación, vista previa, historial |
-| `src/index.css` | Tokens de color OKLch, tema claro/oscuro y resplandor de marca |
-| `src/components/marca.tsx`, `src/components/tema.tsx` | Logotipo, estados e interruptor de tema |
-| `src/components/ui/` | Componentes shadcn/ui (Radix) |
-| `src/store.ts` | Estado y persistencia en `localStorage` |
-| `src/demo.js` | Motor de demostración: interpreta peticiones y dibuja la vista previa |
-| `src/demo.test.mjs` | `node --test`, cubre el motor |
-| `src/store.test.mjs` | Pruebas de historial y migración de ajustes |
-| `Dockerfile`, `compose.yaml` | Construcción y ejecución en contenedor |
-| `server.mjs`, `identity.mjs` | Backend, cuentas, espacios, conexión aislada y endpoint de salud |
-| `opencode.mjs`, `opencode.test.mjs` | Adaptador HTTP de OpenCode y pruebas unitarias |
-| `provision.mjs`, `compose.provision.yaml` | Copia opcional de plantillas en un volumen compartido |
-| `runtime.mjs`, `compose.runtime.yaml` | Inicio opcional de Compose, health checks y URL de preview |
+Proyecto abierto bajo licencia [MIT](LICENSE).

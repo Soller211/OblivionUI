@@ -134,6 +134,7 @@ async function api(req, res, pathname) {
       : { connected: false, available: !!process.env.PAGOBLI_ACCESS_KEY, provisioning, runtime })
   }
   if (pathname === '/api/connect' && req.method === 'POST') {
+    if (actor.workspace.role === 'member') return send(res, 403, { error: 'Solo una persona administradora puede configurar OpenCode.' })
     if (!process.env.PAGOBLI_ACCESS_KEY) return send(res, 503, { error: 'Esta instalación necesita PAGOBLI_ACCESS_KEY para activar OpenCode.' })
     const body = await readJson(req)
     if (!keyMatches(body.accessKey)) return send(res, 401, { error: 'La clave de esta instalación es incorrecta.' })

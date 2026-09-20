@@ -3,7 +3,6 @@ export type WorkspaceAccount = { id: string; name: string; role: 'owner' | 'admi
 export type Identity = { enabled: boolean; authenticated: boolean; user?: Account; workspace?: WorkspaceAccount; workspaces: WorkspaceAccount[] }
 
 export type Connection = { connected: boolean; available?: boolean; provisioning?: boolean; runtime?: boolean; url?: string; version?: string; directory?: string }
-export const staticDemo = import.meta.env.VITE_STATIC_DEMO === 'true'
 
 async function call<T>(path: string, body?: object): Promise<T> {
   const response = await fetch(path, {
@@ -16,20 +15,15 @@ async function call<T>(path: string, body?: object): Promise<T> {
   return data as T
 }
 
-export const getIdentity = () => staticDemo
-  ? Promise.resolve<Identity>({ enabled: false, authenticated: true, user: { id: 'demo', name: 'Visitante', email: '' }, workspace: { id: 'demo', name: 'Demostración pública', role: 'owner' }, workspaces: [{ id: 'demo', name: 'Demostración pública', role: 'owner' }] })
-  : call<Identity>('/api/auth/status')
+export const getIdentity = () => call<Identity>('/api/auth/status')
 export const login = (email: string, password: string) => call<Identity>('/api/auth/login', { email, password })
 export const logout = () => call<{ authenticated: false }>('/api/auth/logout', {})
 export const createWorkspace = (name: string) => call<{ workspace: WorkspaceAccount; workspaces: WorkspaceAccount[] }>('/api/workspaces', { name })
 export const selectWorkspace = (id: string) => call<{ workspace: WorkspaceAccount; workspaces: WorkspaceAccount[] }>(`/api/workspaces/${encodeURIComponent(id)}/select`, {})
 export const addWorkspaceMember = (workspaceId: string, input: { name: string; email: string; password: string; role: 'admin' | 'member' }) => call<{ member: Account }>(`/api/workspaces/${encodeURIComponent(workspaceId)}/members`, input)
 
-export const getConnection = () => staticDemo
-  ? Promise.resolve<Connection>({ connected: false, available: false, provisioning: false, runtime: false })
-  : call<Connection>('/api/connection')
-export const connect = (input: { accessKey: string; url: string; username: string; password: string }) =>
-  staticDemo ? Promise.reject(new Error('La versión pública es una demostración. Conecta OpenCode en una instalación propia de OblivionUI.')) : call<Connection>('/api/connect', input)
+export const getConnection = () => call<Connection>('/api/connection')
+export const connect = (input: { accessKey: string; url: string; username: string; password: string }) => call<Connection>('/api/connect', input)
 export const disconnect = () => call<Connection>('/api/disconnect', {})
 export const createSession = (title: string, directory: string) =>
   call<{ id: string; directory: string }>('/api/session', { title, directory })
