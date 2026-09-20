@@ -89,3 +89,39 @@ Hay pruebas unitarias y configuración Docker Compose. El contenedor de PagObli 
 y la API de conexión; puede copiar la base de un proyecto, pero todavía no crea ni coordina
 su contenedor Laravel.
 Ver `README.md` para uso y límites.
+
+## Lo que falta para pulir el producto
+
+Prioridad sugerida después de recorrer la interfaz local:
+
+1. **Validar el flujo con OpenCode real.** Probar en una instalación concreta la conexión,
+   creación de sesión, uso de un directorio compartido, envío de instrucciones, preguntas,
+   permisos, historial y recuperación. Documentar las diferencias entre versiones de la API y
+   mostrar un mensaje claro cuando una capacidad no esté disponible. El recorrido mínimo debe
+   terminar con un cambio visible y comprobable en una aplicación Laravel.
+2. **Probar la experiencia con personas no técnicas.** Observar si pueden crear un proyecto,
+   entender qué está haciendo la IA, revisar el resultado y pedir un cambio sin ayuda. Ajustar
+   las preguntas iniciales, textos, errores y estados según los puntos donde se detengan.
+   Mantener siempre distinguibles el modo demostración y los proyectos reales.
+3. **Automatizar la ejecución de cada proyecto.** Definir cómo se registra una plantilla,
+   se crea un proyecto aislado y se levanta su contenedor Laravel. Asignar una URL de vista
+   previa automáticamente y mostrar si la aplicación está iniciando, lista o falló. Comprobar
+   la instalación completa con Docker Compose; hasta ahora existen archivos y pruebas, pero
+   no se ha validado localmente la construcción de la imagen Docker.
+4. **Guardar y proteger los proyectos para varios usuarios.** Pasar los metadatos y las
+   conversaciones de `localStorage` a almacenamiento persistente en el servidor. Añadir
+   inicio de sesión, roles, propiedad de proyectos y permisos para ver, editar, recuperar y
+   publicar. Definir límites por proyecto para que una sesión no pueda trabajar en archivos
+   de otro usuario.
+5. **Mejorar la revisión y edición.** Mostrar avances reales de OpenCode de forma comprensible,
+   con estados y errores que indiquen qué hacer. Después, permitir seleccionar elementos de
+   la vista previa y pedir cambios de contenido o apariencia, siempre que la plantilla permita
+   relacionar esos elementos con los archivos correctos.
+6. **Preparar la publicación comunitaria.** Documentar una instalación independiente del
+   servidor del trabajo, configurar plantillas y volúmenes sin editar código, y probar el
+   recorrido de instalación desde cero. Añadir copias de seguridad, migraciones y una forma
+   clara de actualizar PagObli antes de ofrecerlo como servicio para equipos.
+
+El siguiente hito técnico es el primero: una prueba completa con OpenCode y una aplicación
+Laravel reales. Ese resultado debe guiar la automatización de contenedores y los cambios de
+interfaz posteriores.
