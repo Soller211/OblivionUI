@@ -14,6 +14,7 @@ export type Msg = { id: string; role: 'user' | 'app'; text: string; kind?: 'esta
 export type Version = { id: string; label: string; ts: number; html: string; spec: Spec }
 export type Project = {
   id: string
+  folio: number
   name: string
   idea: string
   answers: Record<string, string>
@@ -44,7 +45,14 @@ function load(): DB {
     const { url = '', template = 'Base Laravel' } = parsed.settings || {}
     // La versión anterior guardaba el token en localStorage. No se migra ni se vuelve a guardar.
     // La accesibilidad debe comprobarse de nuevo al abrir la aplicación.
-    const clean: DB = { projects: parsed.projects || [], settings: { url, template, serverReachable: false } }
+    // Expedientes anteriores al folio: se numeran una sola vez por antigüedad.
+    const projects: Project[] = parsed.projects || []
+    let siguiente = 0
+    for (const project of [...projects].sort((a, b) => a.createdAt - b.createdAt)) {
+      if (typeof project.folio === 'number') siguiente = Math.max(siguiente, project.folio)
+      else project.folio = ++siguiente
+    }
+    const clean: DB = { projects, settings: { url, template, serverReachable: false } }
     try { localStorage.setItem(KEY, JSON.stringify(clean)) } catch { /* memoria disponible */ }
     return clean
   } catch {
@@ -74,8 +82,9 @@ export function useDB(): DB {
 
 export const uid = () => Math.random().toString(36).slice(2, 10)
 
-export function addProject(p: Omit<Project, 'id' | 'createdAt' | 'messages' | 'versions'>): Project {
-  const project: Project = { ...p, id: uid(), createdAt: Date.now(), messages: [], versions: [] }
+export function addProject(p: Omit<Project, 'id' | 'folio' | 'createdAt' | 'messages' | 'versions'>): Project {
+  const folio = db.projects.reduce((mayor, project) => Math.max(mayor, project.folio || 0), 0) + 1
+  const project: Project = { ...p, id: uid(), folio, createdAt: Date.now(), messages: [], versions: [] }
   commit({ ...db, projects: [project, ...db.projects] })
   return project
 }
@@ -124,4 +133,4 @@ export function restoreVersion(id: string, sourceId: string) {
 }
 
 export const fecha = (ts: number) =>
-  new Date(ts).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+  new Date(ts).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false })

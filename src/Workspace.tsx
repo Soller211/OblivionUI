@@ -1,9 +1,28 @@
 import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import {
+  CircleCheck, ExternalLink, History, Monitor, RotateCcw, SendHorizontal, Sparkles, TriangleAlert, Undo2,
+} from 'lucide-react'
 import { ESTADOS, interpretar, render } from './demo.js'
 import { fecha, msg, pushMsg, restoreVersion, saveVersion, updateProject, useDB, type Project } from './store'
 import { ir } from './App'
-import { getHistory, getPending, revertChange, sendPrompt, unrevertChange, type Connection, type HistoryEntry, type Pending } from './api'
+import {
+  getHistory, getPending, revertChange, sendPrompt, unrevertChange,
+  type Connection, type HistoryEntry, type Pending,
+} from './api'
 import { PendingDock } from './PendingDock'
+import { Estado, folio, TONO_ESTADO } from '@/components/marca'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
+
+const hora = (ts: number) => new Date(ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false })
+const suave = { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const }
 
 export function Workspace({ id, connection }: { id: string; connection: Connection | null }) {
   const { projects } = useDB()
@@ -163,108 +182,271 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
     finally { setHistoryBusy(false) }
   }
 
+  const vive = p.mode === 'live'
+  const bloqueado = vive && !linked
+  const retenidos = vive && linked && pending && (pending.permissions.length > 0 || pending.questions.length > 0 || !pending.supported)
+
   return (
-    <div className="ws">
-      <div className="pane">
-        <header>
-          <h2>{p.name}</h2>
+    <div className="mx-auto grid min-h-0 w-full max-w-[1600px] flex-1 gap-4 p-4 max-lg:grid-cols-1 lg:h-full lg:grid-cols-[minmax(340px,34%)_1fr]">
+      <Card className="flex min-h-0 flex-col gap-0 overflow-hidden py-0 max-lg:min-h-[32rem]">
+        <header className="bg-muted/40 flex items-center gap-3 border-b px-4 py-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-sm font-semibold">{p.name}</h1>
+            <p className="text-muted-foreground tabular font-mono text-[11px]">{folio(p.folio)}</p>
+          </div>
+          {vive
+            ? <Estado tono="real">Proyecto real</Estado>
+            : <Estado tono="demo"><Sparkles className="size-3" />Demostración</Estado>}
         </header>
-        <div className="chat">
-          <div className="m app">
-            {p.idea}
-            <time>{fecha(p.createdAt)}</time>
-          </div>
+
+        <div className="relative min-h-0 flex-1">
+          <div className="h-full space-y-4 overflow-y-auto p-4">
+          <Asiento rol="app" ts={p.createdAt} apertura>{p.idea}</Asiento>
           {p.messages.map((m) => (
-            <div className={`m ${m.role} ${m.kind === 'error' ? 'error' : ''}`} key={m.id}>
-              {m.text}
-              <time>{fecha(m.ts)}</time>
-            </div>
+            <Asiento key={m.id} rol={m.role} ts={m.ts} error={m.kind === 'error'}>{m.text}</Asiento>
           ))}
+          <AnimatePresence>
+            {estado && (
+              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                transition={suave} className="flex items-center gap-2.5">
+                <Estado tono={TONO_ESTADO[estado] || 'real'}>{estado}</Estado>
+                <span className="flex gap-1" aria-hidden>
+                  {[0, 1, 2].map((i) => (
+                    <motion.span key={i} className="bg-primary/60 size-1.5 rounded-full"
+                      animate={{ opacity: [0.25, 1, 0.25] }}
+                      transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.18 }} />
+                  ))}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <div ref={fin} />
-        </div>
-        {estado && (
-          <div className="estado">
-            <span className="dot" /> {estado}…
           </div>
+          <span aria-hidden
+            className="from-card pointer-events-none absolute inset-x-0 bottom-0 h-5 bg-gradient-to-t to-transparent" />
+        </div>
+
+        <AnimatePresence>
+          {retenidos && (
+            <PendingDock
+              sessionID={p.sessionID || ''}
+              directory={p.directory || ''}
+              pending={pending!}
+              onResolved={() => getPending(p.sessionID!, p.directory || '').then(setPending).catch((e) => setPendingError(e.message))}
+            />
+          )}
+        </AnimatePresence>
+        {vive && pendingError && (
+          <Alert variant="destructive" role="alert" className="mx-4 mb-2 w-auto">
+            <TriangleAlert className="size-4" />
+            <AlertDescription>No se pudieron consultar las autorizaciones pendientes: {pendingError}</AlertDescription>
+          </Alert>
         )}
-        {p.mode === 'live' && linked && pending && (pending.permissions.length > 0 || pending.questions.length > 0 || !pending.supported) &&
-          <PendingDock sessionID={p.sessionID || ''} directory={p.directory || ''} pending={pending}
-            onResolved={() => getPending(p.sessionID!, p.directory || '').then(setPending).catch((e) => setPendingError(e.message))} />}
-        {p.mode === 'live' && pendingError && <p className="bad pending-error">No se pudieron consultar preguntas pendientes: {pendingError}</p>}
-        <div className="composer">
-          <textarea
+
+        <div className="bg-muted/40 space-y-2 border-t p-3">
+          <Textarea
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
+            disabled={bloqueado}
+            aria-label="Escribe lo que necesitas cambiar"
+            className="bg-background max-h-40 min-h-20 resize-none"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault()
                 enviar()
               }
             }}
-            placeholder={p.mode === 'live' ? 'Describe el cambio que necesitas…' : 'Pide un cambio (modo demostración)…'}
+            placeholder={vive ? 'Describe el cambio que necesitas…' : 'Pide un cambio para verlo en la demostración…'}
           />
-          <button className="btn" onClick={enviar} disabled={!texto.trim() || !!estado || (p.mode === 'live' && !linked)}>
-            Enviar
-          </button>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground text-xs">
+              {bloqueado ? 'Sin conexión con OpenCode' : 'Enter envía · Mayús+Enter salta de línea'}
+            </span>
+            <Button size="sm" className="gap-1.5" onClick={enviar} disabled={!texto.trim() || !!estado || bloqueado}>
+              Enviar <SendHorizontal className="size-3.5" />
+            </Button>
+          </div>
         </div>
-      </div>
+      </Card>
 
-      <div className="pane">
-        <header>
-          <div className="tabs">
-            <button className={tab === 'previa' ? 'on' : ''} onClick={() => setTab('previa')}>Vista previa</button>
-            <button className={tab === 'historial' ? 'on' : ''} onClick={() => setTab('historial')}>
-              Historial {p.mode === 'live' ? '' : `(${p.versions.length})`}
-            </button>
-          </div>
-          <span className="spacer" />
-          <span className="estado" style={{ border: 0, padding: 0 }}>
-            {estado ? p.mode === 'live' ? estado : `${estado} · demostración` : p.mode === 'live' ? 'Proyecto real' : p.versions.length ? 'Vista ilustrativa lista' : 'Sin versiones'}
-          </span>
+      <Card className="flex min-h-0 flex-col gap-0 overflow-hidden py-0 max-lg:min-h-[36rem]">
+        <header className="bg-muted/40 flex flex-wrap items-center gap-3 border-b px-4 py-2.5">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as 'previa' | 'historial')}>
+            <TabsList>
+              <TabsTrigger value="previa" className="gap-1.5"><Monitor className="size-3.5" />Vista previa</TabsTrigger>
+              <TabsTrigger value="historial" className="gap-1.5">
+                <History className="size-3.5" />Historial{vive ? '' : ` (${p.versions.length})`}
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <span className="flex-1" />
+          {!estado && !vive && (
+            p.versions.length
+              ? <Estado tono="ok"><CircleCheck className="size-3" />Listo para revisar</Estado>
+              : <Estado tono="neutro">Sin versiones</Estado>
+          )}
         </header>
-        {tab === 'previa' ? p.mode === 'live' ? (
-          <div className="real-preview">
-            <div className="preview-config">
-              <p>Vista previa del proyecto</p>
-              <div className="row"><input type="url" value={previewInput} onChange={(e) => setPreviewInput(e.target.value)} placeholder="URL donde se ejecuta este proyecto" />
-                <button className="btn ghost" onClick={guardarVista}>Guardar URL</button></div>
-              {previewError && <span className="bad">{previewError}</span>}
-              <small>La URL debe apuntar a la aplicación que ya está ejecutándose. Algunas aplicaciones impiden mostrarse dentro de otra página.</small>
-            </div>
-            {safePreviewUrl ? <><a className="open-preview" href={safePreviewUrl} target="_blank" rel="noreferrer">Abrir vista previa en otra pestaña ↗</a>
-              <iframe className="preview" title="Vista previa del proyecto real" src={safePreviewUrl} sandbox="allow-scripts allow-forms" /></>
-              : <div className="empty preview-empty">Agrega la URL de la aplicación para verla aquí.</div>}
-          </div>
-        ) : (
-          <iframe className="preview" title="Vista previa de demostración" srcDoc={p.html} sandbox="allow-forms" />
-        ) : (
-          <div className="vers">
-            {p.mode === 'live' ? <>
-              <p className="sub">Solicitudes de esta sesión de OpenCode. Puedes volver al estado anterior a una de ellas.</p>
-              {canUndoRestore && <button className="btn ghost" onClick={deshacerRecuperacion} disabled={historyBusy}>Deshacer última recuperación</button>}
-              {historyError && <p className="bad" role="alert">{historyError}</p>}
-              {!linked && <p className="sub">Conecta la instancia original para consultar el historial.</p>}
-              {linked && history.length === 0 && !historyError && <p className="sub">Todavía no hay solicitudes en OpenCode.</p>}
-              {history.map((entry) => <div className="ver" key={entry.id}>
-                <div className="history-text">{entry.text || 'Solicitud sin texto'}<br />
-                  {entry.createdAt && <small>{fecha(entry.createdAt)}</small>}</div>
-                <button className="btn ghost" onClick={() => restaurarReal(entry)} disabled={historyBusy || !linked}>Volver aquí</button>
-              </div>)}
-            </> : p.versions.map((v) => (
-              <div className="ver" key={v.id}>
-                <div>
-                  {v.label}
-                  <br />
-                  <small>{fecha(v.ts)}</small>
+
+        {tab === 'previa' ? (
+          vive ? (
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="space-y-2 border-b p-4">
+                <Label htmlFor="vista-url" className="text-xs">Dirección donde se ejecuta el proyecto</Label>
+                <div className="flex gap-2">
+                  <Input id="vista-url" type="url" value={previewInput} className="font-mono text-xs"
+                    onChange={(e) => setPreviewInput(e.target.value)} placeholder="https://mi-proyecto.example.com" />
+                  <Button variant="outline" size="sm" onClick={guardarVista}>Guardar</Button>
+                  {safePreviewUrl && (
+                    <Button asChild variant="ghost" size="icon" aria-label="Abrir en otra pestaña">
+                      <a href={safePreviewUrl} target="_blank" rel="noreferrer"><ExternalLink className="size-4" /></a>
+                    </Button>
+                  )}
                 </div>
-                <button className="btn ghost" onClick={() => restaurar(v)} disabled={v.id === (p.currentVersionId || p.versions[0]?.id)}>
-                  {v.id === (p.currentVersionId || p.versions[0]?.id) ? 'Actual' : 'Recuperar'}
-                </button>
+                {previewError && <p className="text-destructive text-xs" role="alert">{previewError}</p>}
               </div>
-            ))}
+              {safePreviewUrl ? (
+                <iframe className="min-h-0 w-full flex-1 bg-white" title="Vista previa del proyecto real"
+                  src={safePreviewUrl} sandbox="allow-scripts allow-forms" />
+              ) : (
+                <Vacio titulo="Todavía no hay vista previa">
+                  Agrega arriba la dirección donde se ejecuta el proyecto para verlo aquí sin salir de OblivionUI.
+                </Vacio>
+              )}
+            </div>
+          ) : (
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="border-demo/25 bg-demo-bg/50 text-demo flex items-center gap-2.5 border-b px-4 py-2.5 text-xs">
+                <Sparkles className="size-3.5 shrink-0" />
+                <span>Vista ilustrativa del resultado. No hay código real detrás.</span>
+              </div>
+              <iframe className="min-h-0 w-full flex-1 bg-white" title="Vista previa de demostración"
+                srcDoc={p.html} sandbox="allow-forms" />
+            </div>
+          )
+        ) : (
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+            {vive ? (
+              <>
+                <p className="text-muted-foreground text-sm text-pretty">
+                  Solicitudes de esta sesión de OpenCode. Puedes volver al estado anterior a cualquiera de ellas.
+                </p>
+                {canUndoRestore && (
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={deshacerRecuperacion} disabled={historyBusy}>
+                    <Undo2 className="size-3.5" />Deshacer la última recuperación
+                  </Button>
+                )}
+                {historyError && (
+                  <Alert variant="destructive" role="alert">
+                    <TriangleAlert className="size-4" />
+                    <AlertDescription>{historyError}</AlertDescription>
+                  </Alert>
+                )}
+                {!linked && <p className="text-muted-foreground text-sm">Conecta la instancia original para consultar el historial.</p>}
+                {linked && history.length === 0 && !historyError && (
+                  <p className="text-muted-foreground text-sm">Todavía no hay solicitudes registradas en OpenCode.</p>
+                )}
+                {history.map((entry, i) => (
+                  <Version key={entry.id} clave={`${folio(p.folio)}-${String(history.length - i).padStart(2, '0')}`}
+                    titulo={entry.text || 'Solicitud sin texto'} ts={entry.createdAt || undefined}>
+                    <Button variant="outline" size="sm" className="gap-1.5" disabled={historyBusy || !linked}
+                      onClick={() => restaurarReal(entry)}>
+                      <RotateCcw className="size-3.5" />Volver aquí
+                    </Button>
+                  </Version>
+                ))}
+              </>
+            ) : (
+              <>
+                <p className="text-muted-foreground text-sm text-pretty">
+                  Cada cambio queda guardado como una versión. Recuperar una no borra las demás.
+                </p>
+                {p.versions.map((v, i) => {
+                  const actual = v.id === (p.currentVersionId || p.versions[0]?.id)
+                  return (
+                    <Version key={v.id} clave={`${folio(p.folio)}-${String(p.versions.length - i).padStart(2, '0')}`}
+                      titulo={v.label} ts={v.ts}>
+                      {actual
+                        ? <Estado tono="ok"><CircleCheck className="size-3" />Vigente</Estado>
+                        : (
+                          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => restaurar(v)}>
+                            <RotateCcw className="size-3.5" />Recuperar
+                          </Button>
+                        )}
+                    </Version>
+                  )
+                })}
+              </>
+            )}
           </div>
         )}
+      </Card>
+    </div>
+  )
+}
+
+function Asiento({ rol, ts, error, apertura, children }: {
+  rol: 'user' | 'app'
+  ts: number
+  error?: boolean
+  apertura?: boolean
+  children: React.ReactNode
+}) {
+  const usuario = rol === 'user'
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={suave}
+      className={cn('flex flex-col gap-1', usuario ? 'items-end' : 'items-start')}
+    >
+      <div
+        className={cn(
+          'max-w-[88%] rounded-xl px-3.5 py-2.5 text-sm whitespace-pre-wrap [overflow-wrap:anywhere]',
+          usuario && 'bg-primary text-primary-foreground rounded-br-sm',
+          !usuario && !error && 'bg-muted rounded-bl-sm',
+          apertura && 'bg-transparent text-muted-foreground border border-dashed',
+          error && 'bg-destructive/10 text-destructive border-destructive/30 rounded-bl-sm border',
+        )}
+      >
+        {children}
       </div>
+      <time dateTime={new Date(ts).toISOString()} title={fecha(ts)}
+        className="text-muted-foreground tabular px-1 font-mono text-[10px]">
+        {apertura ? `Alta · ${hora(ts)}` : hora(ts)}
+      </time>
+    </motion.div>
+  )
+}
+
+function Version({ clave, titulo, ts, children }: {
+  clave: string
+  titulo: string
+  ts?: number
+  children: React.ReactNode
+}) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={suave}
+      className="hover:bg-accent/40 flex items-center gap-4 rounded-lg border p-3 transition-colors">
+      <span className="text-muted-foreground tabular shrink-0 font-mono text-[11px]">{clave}</span>
+      <div className="min-w-0 flex-1">
+        <p className="line-clamp-3 text-sm [overflow-wrap:anywhere]">{titulo}</p>
+        {ts && (
+          <time dateTime={new Date(ts).toISOString()} className="text-muted-foreground tabular font-mono text-[10px]">
+            {fecha(ts)}
+          </time>
+        )}
+      </div>
+      {children}
+    </motion.div>
+  )
+}
+
+function Vacio({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
+      <span className="bg-primary/10 text-primary rounded-xl p-3"><Monitor className="size-5" /></span>
+      <p className="font-medium">{titulo}</p>
+      <p className="text-muted-foreground max-w-sm text-sm text-pretty">{children}</p>
     </div>
   )
 }

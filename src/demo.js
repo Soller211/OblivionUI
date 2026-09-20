@@ -3,9 +3,9 @@
 // para recorrer el flujo completo antes de conectar OpenCode.
 
 export const PREGUNTAS = [
-  { id: 'solicita', label: '¿Quién inicia el proceso?', ph: 'Ej. cualquier colaborador del área' },
-  { id: 'aprueba', label: '¿Quién revisa o aprueba?', ph: 'Ej. el jefe de área y después finanzas' },
-  { id: 'datos', label: '¿Qué datos se capturan?', ph: 'Ej. concepto, monto, fecha y justificación' },
+  { id: 'solicita', label: '¿Quién inicia el proceso?', ph: 'cualquier colaborador' },
+  { id: 'aprueba', label: '¿Quién revisa o aprueba?', ph: 'jefe de área y finanzas' },
+  { id: 'datos', label: '¿Qué datos se capturan?', ph: 'concepto, monto, fecha' },
 ]
 
 export const ESTADOS = ['Preparando', 'Aplicando cambios', 'Verificando', 'Listo para revisar']

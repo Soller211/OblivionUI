@@ -1,0 +1,373 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-20T00:00:00Z",
+  "title": "Design System: OblivionUI",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Violeta OblivionUI",
+        "canonical": "oklch(0.52 0.23 296)",
+        "dark": "oklch(0.66 0.2 297)",
+        "tonalRamp": [
+          "oklch(0.15 0.23 296)",
+          "oklch(0.26 0.23 296)",
+          "oklch(0.37 0.23 296)",
+          "oklch(0.48 0.23 296)",
+          "oklch(0.59 0.23 296)",
+          "oklch(0.70 0.23 296)",
+          "oklch(0.82 0.23 296)",
+          "oklch(0.95 0.23 296)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Lienzo violeta pálido",
+        "canonical": "oklch(0.99 0.004 300)",
+        "dark": "oklch(0.155 0.018 292)",
+        "tonalRamp": [
+          "oklch(0.15 0.012 298)",
+          "oklch(0.26 0.012 298)",
+          "oklch(0.37 0.012 298)",
+          "oklch(0.48 0.012 298)",
+          "oklch(0.59 0.012 298)",
+          "oklch(0.70 0.012 298)",
+          "oklch(0.82 0.012 298)",
+          "oklch(0.95 0.012 298)"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Tinta violeta profunda",
+        "canonical": "oklch(0.19 0.02 295)",
+        "dark": "oklch(0.97 0.006 300)",
+        "tonalRamp": [
+          "oklch(0.15 0.02 295)",
+          "oklch(0.26 0.02 295)",
+          "oklch(0.37 0.02 295)",
+          "oklch(0.48 0.02 295)",
+          "oklch(0.59 0.02 295)",
+          "oklch(0.70 0.02 295)",
+          "oklch(0.82 0.02 295)",
+          "oklch(0.95 0.02 295)"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Tinta apagada",
+        "canonical": "oklch(0.51 0.03 295)",
+        "dark": "oklch(0.73 0.025 295)",
+        "tonalRamp": [
+          "oklch(0.15 0.03 295)",
+          "oklch(0.26 0.03 295)",
+          "oklch(0.37 0.03 295)",
+          "oklch(0.48 0.03 295)",
+          "oklch(0.59 0.03 295)",
+          "oklch(0.70 0.03 295)",
+          "oklch(0.82 0.03 295)",
+          "oklch(0.95 0.03 295)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Malla",
+        "canonical": "oklch(0.92 0.012 300)",
+        "dark": "oklch(0.99 0.02 300 / 12%)",
+        "tonalRamp": [
+          "oklch(0.15 0.012 300)",
+          "oklch(0.26 0.012 300)",
+          "oklch(0.37 0.012 300)",
+          "oklch(0.48 0.012 300)",
+          "oklch(0.59 0.012 300)",
+          "oklch(0.70 0.012 300)",
+          "oklch(0.82 0.012 300)",
+          "oklch(0.95 0.012 300)"
+        ]
+      },
+      "demo": {
+        "role": "secondary",
+        "displayName": "Rosa demostración",
+        "canonical": "oklch(0.49 0.11 345)",
+        "dark": "oklch(0.82 0.08 345)",
+        "tonalRamp": [
+          "oklch(0.15 0.11 345)",
+          "oklch(0.26 0.11 345)",
+          "oklch(0.37 0.11 345)",
+          "oklch(0.48 0.11 345)",
+          "oklch(0.59 0.11 345)",
+          "oklch(0.70 0.11 345)",
+          "oklch(0.82 0.11 345)",
+          "oklch(0.95 0.11 345)"
+        ]
+      },
+      "hold": {
+        "role": "secondary",
+        "displayName": "Ámbar retenido",
+        "canonical": "oklch(0.52 0.12 75)",
+        "dark": "oklch(0.82 0.13 85)",
+        "tonalRamp": [
+          "oklch(0.15 0.12 75)",
+          "oklch(0.26 0.12 75)",
+          "oklch(0.37 0.12 75)",
+          "oklch(0.48 0.12 75)",
+          "oklch(0.59 0.12 75)",
+          "oklch(0.70 0.12 75)",
+          "oklch(0.82 0.12 75)",
+          "oklch(0.95 0.12 75)"
+        ]
+      },
+      "ok": {
+        "role": "tertiary",
+        "displayName": "Verde verificado",
+        "canonical": "oklch(0.5 0.12 160)",
+        "dark": "oklch(0.78 0.13 162)",
+        "tonalRamp": [
+          "oklch(0.15 0.12 160)",
+          "oklch(0.26 0.12 160)",
+          "oklch(0.37 0.12 160)",
+          "oklch(0.48 0.12 160)",
+          "oklch(0.59 0.12 160)",
+          "oklch(0.70 0.12 160)",
+          "oklch(0.82 0.12 160)",
+          "oklch(0.95 0.12 160)"
+        ]
+      },
+      "destructive": {
+        "role": "tertiary",
+        "displayName": "Rojo destructivo",
+        "canonical": "oklch(0.577 0.245 27.325)",
+        "dark": "oklch(0.704 0.191 22.216)",
+        "tonalRamp": [
+          "oklch(0.15 0.245 27)",
+          "oklch(0.26 0.245 27)",
+          "oklch(0.37 0.245 27)",
+          "oklch(0.48 0.245 27)",
+          "oklch(0.59 0.245 27)",
+          "oklch(0.70 0.245 27)",
+          "oklch(0.82 0.245 27)",
+          "oklch(0.95 0.245 27)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Título de página",
+        "purpose": "Un solo título por vista: «Tus proyectos», «Configuración». 24px, 30px desde 640px."
+      },
+      "headline": {
+        "displayName": "Título de tarjeta",
+        "purpose": "Encabezado de los pasos de alta."
+      },
+      "title": {
+        "displayName": "Título de panel",
+        "purpose": "Tarjetas de configuración, nombre del proyecto, tarjetas de autorización."
+      },
+      "body": {
+        "displayName": "Cuerpo",
+        "purpose": "Conversación, descripciones y celdas de tabla."
+      },
+      "label": {
+        "displayName": "Etiqueta",
+        "purpose": "Etiquetas de campo, pies de ayuda e insignias de estado. Caja normal en español."
+      },
+      "mono": {
+        "displayName": "Dato tabular",
+        "purpose": "Folios, claves de versión, horas, fechas, URL, directorios y comandos. Siempre tabular-nums."
+      }
+    },
+    "shadows": [
+      {
+        "name": "tarjeta-retenida",
+        "value": "0 1px 2px rgb(0 0 0 / 0.05)",
+        "purpose": "Única sombra del sistema: tarjetas de autorización dentro de la bandeja ámbar."
+      },
+      {
+        "name": "anillo-superficie",
+        "value": "inset 0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent)",
+        "purpose": "Sustituto de la sombra en todas las tarjetas: hairline al 10% de la tinta."
+      }
+    ],
+    "motion": [
+      {
+        "name": "suave",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Curva única del producto."
+      },
+      {
+        "name": "duracion",
+        "value": "0.22s",
+        "purpose": "Duración única: entrada de ruta, filas escalonadas, subrayado de navegación, barra de progreso, apertura de franjas."
+      },
+      {
+        "name": "escalonado-fila",
+        "value": "0.04s por fila, tope 0.2s",
+        "purpose": "Retardo acumulado de filas de tabla, tarjetas de proyecto y versiones."
+      },
+      {
+        "name": "latido-estado",
+        "value": "1.1s loop, desfase 0.18s, opacidad 0.25 → 1 → 0.25",
+        "purpose": "Los tres puntos junto al estado de trabajo. Única animación en bucle."
+      },
+      {
+        "name": "gobierno",
+        "value": "MotionConfig reducedMotion=\"user\"",
+        "purpose": "Toda la animación se apaga si el sistema operativo lo pide."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "contenedor-registro",
+        "value": "72rem"
+      },
+      {
+        "name": "contenedor-formulario",
+        "value": "42rem"
+      },
+      {
+        "name": "contenedor-taller",
+        "value": "1600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal de la vista. Una sola por pantalla.",
+      "html": "<button class=\"ds-btn-primary\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M5 12h14M12 5v14\"/></svg>Nuevo proyecto</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid transparent;border-radius:10px;background:var(--primary,oklch(0.52 0.23 296));color:var(--primary-foreground,oklch(0.99 0.01 300));font:500 14px/1 'Geist Variable',ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1)}.ds-btn-primary svg{width:16px;height:16px}.ds-btn-primary:hover{background:color-mix(in oklch,var(--primary,oklch(0.52 0.23 296)) 80%,transparent)}.ds-btn-primary:focus-visible{outline:none;border-color:var(--ring,oklch(0.52 0.23 296));box-shadow:0 0 0 3px color-mix(in oklch,var(--ring,oklch(0.52 0.23 296)) 50%,transparent)}.ds-btn-primary:active{transform:translateY(1px)}"
+    },
+    {
+      "name": "Botón secundario",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Acción de apoyo: «Atrás», «Recuperar», «No autorizar».",
+      "html": "<button class=\"ds-btn-outline\">Recuperar</button>",
+      "css": ".ds-btn-outline{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--border,oklch(0.92 0.012 300));border-radius:10px;background:var(--background,oklch(0.99 0.004 300));color:var(--foreground,oklch(0.19 0.02 295));font:500 12.8px/1 'Geist Variable',ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1)}.ds-btn-outline:hover{background:var(--muted,oklch(0.965 0.008 300))}.ds-btn-outline:focus-visible{outline:none;border-color:var(--ring,oklch(0.52 0.23 296));box-shadow:0 0 0 3px color-mix(in oklch,var(--ring,oklch(0.52 0.23 296)) 50%,transparent)}"
+    },
+    {
+      "name": "Insignia de estado",
+      "kind": "chip",
+      "refersTo": "estado-real",
+      "description": "Píldora que dice en qué estado está un expediente. Cinco tonos, cada uno con un solo significado.",
+      "html": "<span class=\"ds-estado ds-estado-real\">Proyecto real</span> <span class=\"ds-estado ds-estado-demo\">Demostración</span> <span class=\"ds-estado ds-estado-hold\">Retenido</span> <span class=\"ds-estado ds-estado-ok\">Listo para revisar</span>",
+      "css": ".ds-estado{display:inline-flex;align-items:center;gap:6px;height:20px;padding:2px 8px;border-radius:26px;border:1px solid transparent;font:500 12px/1 'Geist Variable',ui-sans-serif,system-ui,sans-serif;white-space:nowrap}.ds-estado-real{border-color:color-mix(in oklch,var(--primary,oklch(0.52 0.23 296)) 35%,transparent);background:color-mix(in oklch,var(--primary,oklch(0.52 0.23 296)) 10%,transparent);color:var(--primary,oklch(0.52 0.23 296))}.ds-estado-demo{border-color:color-mix(in oklch,var(--demo,oklch(0.49 0.11 345)) 35%,transparent);background:var(--demo-bg,oklch(0.975 0.012 345));color:var(--demo,oklch(0.49 0.11 345))}.ds-estado-hold{border-color:color-mix(in oklch,var(--hold,oklch(0.52 0.12 75)) 35%,transparent);background:var(--hold-bg,oklch(0.96 0.05 85));color:var(--hold,oklch(0.52 0.12 75))}.ds-estado-ok{border-color:color-mix(in oklch,var(--ok,oklch(0.5 0.12 160)) 35%,transparent);background:var(--ok-bg,oklch(0.955 0.035 160));color:var(--ok,oklch(0.5 0.12 160))}"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de formulario. El cursor es violeta y el foco dibuja anillo de 3px.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Nombre del proyecto</span><input class=\"ds-input\" placeholder=\"Aprobación de presupuestos\"/></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:8px}.ds-field-label{font:500 12px/1.4 'Geist Variable',ui-sans-serif,system-ui,sans-serif;color:var(--foreground,oklch(0.19 0.02 295))}.ds-input{height:32px;padding:4px 10px;border:1px solid var(--input,oklch(0.92 0.012 300));border-radius:10px;background:transparent;color:var(--foreground,oklch(0.19 0.02 295));caret-color:var(--primary,oklch(0.52 0.23 296));font:400 14px/1.5 'Geist Variable',ui-sans-serif,system-ui,sans-serif;transition:border-color .22s cubic-bezier(.22,1,.36,1)}.ds-input::placeholder{color:var(--muted-foreground,oklch(0.51 0.03 295))}.ds-input:focus-visible{outline:none;border-color:var(--ring,oklch(0.52 0.23 296));box-shadow:0 0 0 3px color-mix(in oklch,var(--ring,oklch(0.52 0.23 296)) 50%,transparent)}"
+    },
+    {
+      "name": "Tarjeta de expediente",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Superficie base: plana, anillo de 1px, cabecera hundida en tono muted.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-head\"><div><p class=\"ds-card-title\">Aprobación de presupuestos</p><p class=\"ds-card-folio\">EXP-0004</p></div><span class=\"ds-card-estado\">Proyecto real</span></div><div class=\"ds-card-body\">Describe lo que necesitas y revisa el resultado sin tocar código.</div></div>",
+      "css": ".ds-card{border-radius:14px;overflow:hidden;background:var(--card,oklch(1 0 0));color:var(--foreground,oklch(0.19 0.02 295));box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--foreground,oklch(0.19 0.02 295)) 10%,transparent);max-width:420px}.ds-card-head{display:flex;align-items:center;gap:12px;padding:12px 16px;background:color-mix(in oklch,var(--muted,oklch(0.965 0.008 300)) 40%,transparent);border-bottom:1px solid var(--border,oklch(0.92 0.012 300))}.ds-card-title{margin:0;font:600 14px/1.4 'Geist Variable',ui-sans-serif,system-ui,sans-serif}.ds-card-folio{margin:2px 0 0;font:400 11px/1.45 'Geist Mono Variable',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--muted-foreground,oklch(0.51 0.03 295))}.ds-card-estado{margin-left:auto;height:20px;padding:2px 8px;border-radius:26px;border:1px solid color-mix(in oklch,var(--primary,oklch(0.52 0.23 296)) 35%,transparent);background:color-mix(in oklch,var(--primary,oklch(0.52 0.23 296)) 10%,transparent);color:var(--primary,oklch(0.52 0.23 296));font:500 12px/16px 'Geist Variable',ui-sans-serif,system-ui,sans-serif;white-space:nowrap}.ds-card-body{padding:16px;font:400 14px/1.5 'Geist Variable',ui-sans-serif,system-ui,sans-serif;color:var(--muted-foreground,oklch(0.51 0.03 295))}"
+    },
+    {
+      "name": "Navegación superior",
+      "kind": "nav",
+      "refersTo": "button-ghost",
+      "description": "Barra de 56px translúcida con desenfoque; el enlace activo lleva una barra violeta de 2px al pie.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link ds-nav-link-activo\" href=\"#\" aria-current=\"page\">Proyectos</a><a class=\"ds-nav-link\" href=\"#\">Configuración</a></nav>",
+      "css": ".ds-nav{display:flex;align-items:center;gap:4px;height:56px;padding:0 24px;background:color-mix(in oklch,var(--background,oklch(0.99 0.004 300)) 80%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--border,oklch(0.92 0.012 300))}.ds-nav-link{position:relative;display:inline-flex;align-items:center;height:28px;padding:0 10px;border-radius:10px;text-decoration:none;color:var(--muted-foreground,oklch(0.51 0.03 295));font:500 12.8px/1 'Geist Variable',ui-sans-serif,system-ui,sans-serif;transition:all .22s cubic-bezier(.22,1,.36,1)}.ds-nav-link:hover{background:var(--muted,oklch(0.965 0.008 300));color:var(--foreground,oklch(0.19 0.02 295))}.ds-nav-link:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring,oklch(0.52 0.23 296)) 50%,transparent)}.ds-nav-link-activo{color:var(--foreground,oklch(0.19 0.02 295))}.ds-nav-link-activo::after{content:\"\";position:absolute;left:8px;right:8px;bottom:-14px;height:2px;border-radius:9999px;background:var(--primary,oklch(0.52 0.23 296))}"
+    },
+    {
+      "name": "Franja de instalación",
+      "kind": "custom",
+      "refersTo": "franja-instalacion",
+      "description": "Banda bajo la barra superior que dice en qué modo corre la instalación. Solo tres tonos: verde conectado, ámbar sin respuesta, rosa demostración.",
+      "html": "<div class=\"ds-franja ds-franja-demo\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9.94 14.06 2 22l7.94-7.94M12 3l1.9 4.1L18 9l-4.1 1.9L12 15l-1.9-4.1L6 9l4.1-1.9z\"/></svg><span><strong>Modo demostración.</strong> Lo que se ve es ilustrativo: no se ejecuta código real.</span></div>",
+      "css": ".ds-franja{display:flex;align-items:center;gap:10px;padding:10px 24px;font:400 14px/1.5 'Geist Variable',ui-sans-serif,system-ui,sans-serif}.ds-franja svg{width:16px;height:16px;flex-shrink:0}.ds-franja strong{font-weight:500}.ds-franja-demo{background:color-mix(in oklch,var(--demo-bg,oklch(0.975 0.012 345)) 60%,transparent);color:var(--demo,oklch(0.49 0.11 345));border-bottom:1px solid color-mix(in oklch,var(--demo,oklch(0.49 0.11 345)) 25%,transparent)}"
+    },
+    {
+      "name": "Tarjeta de autorización retenida",
+      "kind": "custom",
+      "refersTo": "estado-hold",
+      "description": "Pieza de la bandeja ámbar: el trabajo está detenido hasta que la persona responde. Única superficie del sistema con sombra.",
+      "html": "<div class=\"ds-dock\"><div class=\"ds-dock-head\"><span class=\"ds-dock-badge\">Retenido</span><span class=\"ds-dock-nota\">El trabajo está detenido hasta que respondas · 1 pendiente</span></div><section class=\"ds-dock-card\"><h3 class=\"ds-dock-title\">Autoriza: ejecutar un comando en el servidor</h3><code class=\"ds-dock-code\">php artisan migrate</code><div class=\"ds-dock-acciones\"><button class=\"ds-btn-primary\">Autorizar esta vez</button><button class=\"ds-btn-outline\">No autorizar</button></div></section></div>",
+      "css": ".ds-dock{padding:12px;background:color-mix(in oklch,var(--hold-bg,oklch(0.96 0.05 85)) 40%,transparent);border-top:1px solid color-mix(in oklch,var(--hold,oklch(0.52 0.12 75)) 30%,transparent)}.ds-dock-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:8px}.ds-dock-badge{height:20px;padding:2px 8px;border-radius:26px;border:1px solid color-mix(in oklch,var(--hold,oklch(0.52 0.12 75)) 35%,transparent);background:var(--hold-bg,oklch(0.96 0.05 85));color:var(--hold,oklch(0.52 0.12 75));font:500 12px/16px 'Geist Variable',ui-sans-serif,system-ui,sans-serif}.ds-dock-nota{font:400 12px/1.4 'Geist Variable',ui-sans-serif,system-ui,sans-serif;color:var(--hold,oklch(0.52 0.12 75))}.ds-dock-card{background:var(--card,oklch(1 0 0));border:1px solid color-mix(in oklch,var(--hold,oklch(0.52 0.12 75)) 30%,transparent);border-radius:10px;padding:14px;box-shadow:0 1px 2px rgb(0 0 0 / .05)}.ds-dock-title{margin:0 0 12px;font:600 14px/1.4 'Geist Variable',ui-sans-serif,system-ui,sans-serif;color:var(--foreground,oklch(0.19 0.02 295))}.ds-dock-code{display:block;padding:10px;border:1px solid var(--border,oklch(0.92 0.012 300));border-radius:8px;background:var(--muted,oklch(0.965 0.008 300));font:400 11px/1.6 'Geist Mono Variable',ui-monospace,monospace;color:var(--foreground,oklch(0.19 0.02 295));overflow-wrap:anywhere}.ds-dock-acciones{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.ds-dock-acciones .ds-btn-primary{height:28px;font-size:12.8px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "El expediente vivo",
+    "overview": "OblivionUI es una consola interna que se comporta como un expediente en marcha: cada proyecto tiene folio (EXP-0001), estado visible, movimientos fechados y versiones recuperables. El mundo es de convención bien ejecutada —superficies claras, un solo acento violeta, tipografía Geist, retícula estricta— y toda su expresividad se concentra en un punto: decirle a la persona, sin lenguaje técnico, en qué estado está el trabajo y si el sistema está esperando algo de ella.\n\nLa densidad es de herramienta de trabajo, no de página de marketing: controles de 32px de alto, tarjetas con relleno de 16px, texto de cuerpo en 14px y cifras en mono tabular. La única luz del mundo es un resplandor radial violeta fijo detrás del contenido (una sola fuente, arriba al centro), que existe para que el violeta de marca se sienta presente sin repetirlo por toda la pantalla. Claro y oscuro son dos mundos reales, no una inversión: el oscuro sube la luminosidad del acento (de 0.52 a 0.66) y adelgaza los bordes a transparencias.\n\nLo que se rechaza explícitamente es la convención floja: componentes desalineados, estados a medias y animación decorativa. Los componentes vienen de shadcn/ui sobre Radix y se componen, no se reestilizan; el color semántico hace el trabajo de comunicación que en otros productos hace el adorno.",
+    "keyCharacteristics": [
+      "Cuatro tonos semánticos que nunca decoran: violeta, rosa, ámbar y verde significan una cosa cada uno.",
+      "Superficies planas con anillo de 1px; profundidad por capas tonales, no por sombras.",
+      "Un solo resplandor de marca, fijo detrás de todo el contenido.",
+      "Geist para interfaz, Geist Mono tabular para folios, horas y rutas; ambas autoalojadas.",
+      "Una sola duración (0.22s) y una sola curva para todo lo que se mueve.",
+      "Español es-MX en toda la interfaz; la marca visible es OblivionUI."
+    ],
+    "rules": [
+      {
+        "name": "La regla de los cuatro significados",
+        "body": "Violeta = real, rosa = demostración, ámbar = retenido, verde = verificado. Un tono no se usa nunca porque quede bien: si un elemento no está diciendo una de esas cuatro cosas, es neutro.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla de una sola luz",
+        "body": "Hay exactamente un resplandor en el producto: el radial violeta fijo detrás del contenido (background-attachment: fixed, 34% en claro, 26% en oscuro). Ninguna otra superficie tiene gradiente de color; los únicos gradientes adicionales son las máscaras de desvanecido hacia el borde inferior de las listas con scroll.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla del tono sobre fondo",
+        "body": "Cada tono semántico viaja en pareja: texto en el tono, fondo en su -bg y borde en el tono al 25–35% de opacidad. Nunca texto de tono sobre fondo neutro suelto.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla del dato tabular",
+        "body": "Todo número que se compare en vertical —folio, hora, fecha, clave de versión, conteo de versiones— va en Geist Mono con font-variant-numeric: tabular-nums (clase .tabular). Los números dentro de una frase no.",
+        "section": "typography"
+      },
+      {
+        "name": "La regla de la caja baja",
+        "body": "Los títulos y etiquetas van en caja normal en español. La única excepción del build es el contador de pasos («PASO 1 DE 2», 12px, tracking-wide), que es un indicador de progreso acompañado de su barra, no un rótulo decorativo.",
+        "section": "typography"
+      },
+      {
+        "name": "La regla del hairline",
+        "body": "Toda separación es un borde de 1px en --border. Si dos superficies necesitan distinguirse, se cambia el tono del fondo antes que añadir sombra.",
+        "section": "elevation"
+      },
+      {
+        "name": "La regla del desvanecido",
+        "body": "Las listas con scroll (conversación, bandeja de pendientes) terminan en una máscara de 20–24px hacia transparente del color de su propio contenedor, para que el corte no parezca el final del contenido.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do traer componentes nuevos con npx shadcn@latest add <nombre> y componerlos; el color semántico se aplica por clase encima, no reescribiendo el componente.",
+      "Do usar cada tono por su significado: violeta real, rosa demostración, ámbar retenido, verde verificado; y siempre en pareja tono + -bg + borde al 25–35%.",
+      "Do escribir folios, horas, fechas, rutas y comandos en Geist Mono con .tabular.",
+      "Do mover las cosas con 0.22s y cubic-bezier(0.22, 1, 0.36, 1), y nada más.",
+      "Do sustituir la tabla por una tarjeta por proyecto bajo 640px.",
+      "Do separar superficies con un hairline de 1px o un escalón tonal (bg-muted/40).",
+      "Do mantener los textos en español es-MX y la marca visible como OblivionUI."
+    ],
+    "donts": [
+      "Don't añadir sombras para dar profundidad; la única sombra del sistema es la shadow-xs de las tarjetas de autorización.",
+      "Don't introducir un segundo resplandor, degradado de color o fondo decorativo: hay una sola luz.",
+      "Don't usar violeta, rosa, ámbar o verde como adorno, ni inventar un quinto tono semántico.",
+      "Don't animar nada con otra duración o curva, ni añadir animaciones en bucle además de los puntos del estado de trabajo.",
+      "Don't depender de recursos externos (CDN de fuentes o iconos): la instalación corre en red cerrada y Geist y Geist Mono se sirven desde el propio paquete.",
+      "Don't mostrar vocabulario técnico de OpenCode fuera de las zonas de administrador; el resto de la interfaz habla en lenguaje de negocio.",
+      "Don't recortar la tabla ni ocultar el estado de un proyecto para ganar espacio."
+    ]
+  }
+}

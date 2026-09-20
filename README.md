@@ -1,7 +1,8 @@
-# PagObli
+# OblivionUI
 
-Plataforma visual para que personas sin perfil técnico creen proyectos describiéndolos
-con palabras de negocio. El objetivo y el alcance están en [NOTAS.md](NOTAS.md).
+**OblivionUI** es la plataforma visual para que personas sin perfil técnico creen proyectos
+describiéndolos con palabras de negocio. `PagObli` es el nombre del repositorio y el prefijo
+de las variables de entorno; la interfaz se llama OblivionUI. El objetivo y el alcance están en [NOTAS.md](NOTAS.md).
 
 Proyecto abierto bajo licencia [MIT](LICENSE). Requiere Node.js 22 o superior
 para desarrollo local; la imagen Docker usa Node.js 24.
@@ -94,7 +95,8 @@ cuentas y una base de datos.
 
 ## Qué incluye hoy (primer alcance)
 
-- Listado de proyectos y creación en dos pasos (idea + tres preguntas de negocio).
+- Lista de proyectos con folio, estado y último movimiento.
+- Alta en dos pasos: la idea, y un bloque de responsables (solicita / autoriza / datos).
 - Espacio de trabajo: conversación a la izquierda, vista previa a la derecha.
 - Estados comprensibles: Preparando → Aplicando cambios → Verificando → Listo para revisar.
 - Historial de versiones: recuperar una versión crea una nueva entrada, conservando las anteriores.
@@ -113,12 +115,37 @@ Los proyectos de demostración siguen separados de los proyectos conectados a Op
 Aprovisionamiento automático de contenedores Laravel, usuarios y permisos,
 edición visual sobre la vista previa, publicación y persistencia compartida.
 
+## Diseño
+
+Interfaz construida con **Tailwind CSS v4 + shadcn/ui (Radix) + motion**, con identidad
+morada propia de OblivionUI en OKLch y tema claro/oscuro que sigue al sistema operativo
+(con interruptor que recuerda la elección). Las tipografías Geist y Geist Mono se sirven
+auto-hospedadas: nada se pide a una CDN externa.
+
+Colores con significado, no decorativos:
+
+| Tono | Significado |
+| --- | --- |
+| Violeta (marca) | Acción principal, selección, foco y proyecto real |
+| Rosa apagado | Demostración: no se ejecuta código real |
+| Ámbar | Retenido: OpenCode espera una autorización o una respuesta |
+| Verde | Verificado y listo para revisar |
+
+Los componentes de `src/components/ui/` vienen de shadcn/ui y se pueden actualizar con
+`npx shadcn@latest add <componente>`. El sistema completo —paleta OKLch, tipografía, forma, espacio, movimiento y componentes—
+está documentado en [`DESIGN.md`](DESIGN.md). La verdad de producto está en
+[`PRODUCT.md`](PRODUCT.md) y la estrategia de esta interfaz en
+`.impeccable/surfaces/src-app-tsx.md`.
+
 ## Archivos
 
 | Archivo | Para qué |
 | --- | --- |
-| `src/App.tsx` | Rutas (hash), listado, alta de proyecto, configuración |
+| `src/App.tsx` | Rutas (hash), lista de proyectos, alta, configuración |
 | `src/Workspace.tsx` | Conversación, vista previa, historial |
+| `src/index.css` | Tokens de color OKLch, tema claro/oscuro y resplandor de marca |
+| `src/components/marca.tsx`, `src/components/tema.tsx` | Logotipo, estados e interruptor de tema |
+| `src/components/ui/` | Componentes shadcn/ui (Radix) |
 | `src/store.ts` | Estado y persistencia en `localStorage` |
 | `src/demo.js` | Motor de demostración: interpreta peticiones y dibuja la vista previa |
 | `src/demo.test.mjs` | `node --test`, cubre el motor |
