@@ -11,3 +11,5 @@ template-laravel/
 # Capturas de inspección de diseño (transitorias)
 .impeccable/review/
 .impeccable/mocks/
+
+.data/

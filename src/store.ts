@@ -34,12 +34,13 @@ export type Project = {
 export type Settings = { url: string; template: string; serverReachable: boolean }
 type DB = { projects: Project[]; settings: Settings }
 
-const KEY = 'pagobli.v1'
+let scope = 'local'
+const key = () => scope === 'local' ? 'pagobli.v1' : `pagobli.v2.${scope}`
 const empty: DB = { projects: [], settings: { url: '', template: 'Base Laravel', serverReachable: false } }
 
 function load(): DB {
   try {
-    const raw = localStorage.getItem(KEY)
+    const raw = localStorage.getItem(key())
     if (!raw) return empty
     const parsed = JSON.parse(raw)
     const { url = '', template = 'Base Laravel' } = parsed.settings || {}
@@ -53,7 +54,7 @@ function load(): DB {
       else project.folio = ++siguiente
     }
     const clean: DB = { projects, settings: { url, template, serverReachable: false } }
-    try { localStorage.setItem(KEY, JSON.stringify(clean)) } catch { /* memoria disponible */ }
+    try { localStorage.setItem(key(), JSON.stringify(clean)) } catch { /* memoria disponible */ }
     return clean
   } catch {
     return empty
@@ -66,10 +67,16 @@ const subs = new Set<() => void>()
 function commit(next: DB) {
   db = next
   try {
-    localStorage.setItem(KEY, JSON.stringify(db))
+    localStorage.setItem(key(), JSON.stringify(db))
   } catch {
     /* modo privado: la sesión sigue funcionando en memoria */
   }
+  subs.forEach((f) => f())
+}
+
+export function setScope(next: string) {
+  scope = next || 'local'
+  db = load()
   subs.forEach((f) => f())
 }
 

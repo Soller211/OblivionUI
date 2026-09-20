@@ -61,7 +61,7 @@ test('el backend conecta, crea una sesión y envía un mensaje real por la API',
   const child = spawn(process.execPath, ['server.mjs'], {
     cwd: process.cwd(),
     env: { ...process.env, PORT: String(port), PAGOBLI_ACCESS_KEY: 'clave-de-prueba',
-      PAGOBLI_TEMPLATE_DIR: templateDir, PAGOBLI_WORKSPACE_ROOT: workspaceRoot, PAGOBLI_OPENCODE_WORKSPACE_ROOT: '/remote' },
+      PAGOBLI_TEMPLATE_DIR: templateDir, PAGOBLI_WORKSPACE_ROOT: workspaceRoot, PAGOBLI_OPENCODE_WORKSPACE_ROOT: '/remote', PAGOBLI_ADMIN_EMAIL: 'admin@empresa.mx', PAGOBLI_ADMIN_PASSWORD: 'contraseña-larga-123', PAGOBLI_IDENTITY_FILE: join(baseDir, 'identity.json') },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
   try {
@@ -77,9 +77,12 @@ test('el backend conecta, crea una sesión y envía un mensaje real por la API',
     })
     const rejected = await post('/api/connect', { accessKey: 'incorrecta', url: 'http://127.0.0.1:1' })
     assert.equal(rejected.status, 401)
-    const connected = await post('/api/connect', { accessKey: 'clave-de-prueba', url: `http://127.0.0.1:${upstream.address().port}` })
+    const login = await post('/api/auth/login', { email: 'admin@empresa.mx', password: 'contraseña-larga-123' })
+    assert.equal(login.status, 200)
+    const authCookie = login.headers.get('set-cookie').split(';')[0]
+    const connected = await post('/api/connect', { accessKey: 'clave-de-prueba', url: `http://127.0.0.1:${upstream.address().port}` }, authCookie)
     assert.equal(connected.status, 200)
-    const cookie = connected.headers.get('set-cookie').split(';')[0]
+    const cookie = `${authCookie}; ${connected.headers.get('set-cookie').split(';')[0]}`
     const connection = await (await fetch(base + '/api/connection', { headers: { Cookie: cookie } })).json()
     assert.equal(connection.connected, true)
     assert.equal(connection.provisioning, true)
@@ -114,6 +117,11 @@ test('el backend conecta, crea una sesión y envía un mensaje real por la API',
     const failed = await post('/api/provision', { title: 'Fallo' }, cookie)
     assert.equal(failed.status, 409)
     assert.deepEqual(await readdir(workspaceRoot), [provisioned.directory.split('/').at(-1)])
+    const createdWorkspace = await post('/api/workspaces', { name: 'Operaciones' }, cookie)
+    assert.equal(createdWorkspace.status, 201)
+    const isolatedConnection = await fetch(base + '/api/connection', { headers: { Cookie: cookie } })
+    assert.equal(isolatedConnection.status, 200)
+    assert.equal((await isolatedConnection.json()).connected, false)
   } finally {
     child.kill()
     await new Promise((resolve) => upstream.close(resolve))

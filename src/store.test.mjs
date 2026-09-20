@@ -13,7 +13,7 @@ globalThis.localStorage = {
   setItem: (key, value) => values.set(key, value),
 }
 
-const { addProject, saveVersion, restoreVersion } = await import('./store.ts')
+const { addProject, saveVersion, restoreVersion, setScope } = await import('./store.ts')
 const snapshot = () => JSON.parse(values.get('pagobli.v1'))
 
 test('migra ajustes antiguos sin conservar credenciales ni estado de conexión', () => {
@@ -41,4 +41,16 @@ test('recuperar crea una nueva versión y conserva las anteriores', () => {
   assert.equal(after.spec.titulo, 'Proyecto')
   assert.equal(after.versions[1].spec.titulo, 'Proyecto actualizado')
   assert.equal(restoreVersion(project.id, after.currentVersionId), false)
+})
+
+test('separa los proyectos locales por cuenta y espacio', () => {
+  const spec = specInicial('A', {}, 'Idea A')
+  setScope('ana.ventas')
+  addProject({ name: 'Ventas', idea: spec.idea, answers: {}, html: render(spec), spec })
+  assert.equal(JSON.parse(values.get('pagobli.v2.ana.ventas')).projects.length, 1)
+  setScope('luis.operaciones')
+  assert.equal(JSON.parse(values.get('pagobli.v2.luis.operaciones') || '{"projects":[]}').projects.length, 0)
+  setScope('ana.ventas')
+  assert.equal(JSON.parse(values.get('pagobli.v2.ana.ventas')).projects[0].name, 'Ventas')
+  setScope('local')
 })

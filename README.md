@@ -38,7 +38,7 @@ las peticiones `/api` al backend del puerto 8080.
 
 ```bash
 cp .env.example .env
-# Edita PAGOBLI_ACCESS_KEY con una clave propia y larga.
+# Edita PAGOBLI_ACCESS_KEY y las variables PAGOBLI_ADMIN_* con valores propios.
 docker compose up --build -d
 ```
 
@@ -55,7 +55,7 @@ proceso sin privilegios. Para detenerla: `docker compose down`.
    Si OpenCode está en el host, prueba `http://host.docker.internal:4096` en la
    pantalla de Configuración. `localhost` dentro del contenedor se refiere a
    PagObli, no al host.
-2. En Configuración, introduce la dirección, la clave `PAGOBLI_ACCESS_KEY` y,
+2. Inicia sesión con la cuenta administradora configurada por `PAGOBLI_ADMIN_EMAIL` y `PAGOBLI_ADMIN_PASSWORD`. En Configuración puedes crear espacios de trabajo, añadir integrantes y conectar OpenCode. Introduce la dirección, la clave `PAGOBLI_ACCESS_KEY` y,
    si protegiste OpenCode con autenticación básica, su usuario y contraseña.
    La contraseña de OpenCode se guarda solo en memoria del backend durante la
    sesión; no se escribe en `localStorage` ni en un archivo.
@@ -102,9 +102,11 @@ esperar sus health checks y asignar una URL de vista previa. Consulta la configu
 en [docs/EJECUCION_DE_PROYECTOS.md](docs/EJECUCION_DE_PROYECTOS.md).
 
 Esta conexión usa la API HTTP de OpenCode descrita en
-[su documentación](https://dev.opencode.ai/docs/server/). Es una base para
-instalaciones individuales. Aún faltan permisos por usuario, streaming de avances y persistencia
-compartida de proyectos. El inicio automático de contenedores requiere la configuración opcional
+[su documentación](https://dev.opencode.ai/docs/server/). Las cuentas se activan al definir
+`PAGOBLI_ADMIN_EMAIL` y `PAGOBLI_ADMIN_PASSWORD` antes del primer arranque. La contraseña
+se deriva con `scrypt`; la ficha de usuarios queda en el volumen Docker `pagobli-data`. Cada
+cuenta entra en sus espacios de trabajo y la conexión de OpenCode se vincula a esa cuenta y
+espacio durante su sesión. Aún faltan streaming de avances y persistencia compartida de proyectos. El inicio automático de contenedores requiere la configuración opcional
 descrita arriba y debe validarse con la plantilla Laravel de cada instalación. Si una versión de OpenCode no expone preguntas o
 permisos por su API, PagObli lo señala y esa decisión debe resolverse en
 OpenCode.
@@ -113,7 +115,7 @@ La clave de instalación protege las operaciones del backend; usa HTTPS si
 accedes a PagObli u OpenCode desde otra máquina.
 
 Los metadatos y conversaciones de PagObli todavía se guardan en el `localStorage`
-de cada navegador. Las sesiones y el código reales los conserva la instancia de
+de cada navegador, separado por cuenta y espacio. Las sesiones y el código reales los conserva la instancia de
 OpenCode en su entorno. Al reiniciar PagObli hay que volver a conectar OpenCode;
 no se guardan credenciales. Una instalación para varios usuarios necesitará
 cuentas y una base de datos.
@@ -128,7 +130,8 @@ cuentas y una base de datos.
 - Estados de la demostración diferenciados de los proyectos reales; una vista ilustrativa nunca
   se presenta como aplicación verificada.
 - Historial de versiones: recuperar una versión crea una nueva entrada, conservando las anteriores.
-- Conexión real con una instancia propia de OpenCode mediante el backend.
+- Cuentas con inicio de sesión, roles de propietario / administrador / integrante y espacios de trabajo.
+- Conexión real con una instancia propia de OpenCode mediante el backend, aislada por cuenta y espacio.
 - Preguntas y permisos pendientes de OpenCode en el espacio de trabajo.
 - Historial de solicitudes reales con recuperación mediante OpenCode.
 - Ficha de contexto para proyectos reales, obtenida del contenedor con una lista cerrada de archivos.
@@ -142,7 +145,7 @@ Los proyectos de demostración siguen separados de los proyectos conectados a Op
 
 ## Qué falta (etapas posteriores de NOTAS.md)
 
-Usuarios y permisos, edición visual sobre la vista previa, publicación y persistencia compartida.
+Persistencia compartida de proyectos, edición visual sobre la vista previa y publicación.
 
 ## Diseño
 
@@ -180,7 +183,7 @@ está documentado en [`DESIGN.md`](DESIGN.md). La verdad de producto está en
 | `src/demo.test.mjs` | `node --test`, cubre el motor |
 | `src/store.test.mjs` | Pruebas de historial y migración de ajustes |
 | `Dockerfile`, `compose.yaml` | Construcción y ejecución en contenedor |
-| `server.mjs` | Backend de conexión, archivos estáticos y endpoint de salud |
+| `server.mjs`, `identity.mjs` | Backend, cuentas, espacios, conexión aislada y endpoint de salud |
 | `opencode.mjs`, `opencode.test.mjs` | Adaptador HTTP de OpenCode y pruebas unitarias |
 | `provision.mjs`, `compose.provision.yaml` | Copia opcional de plantillas en un volumen compartido |
 | `runtime.mjs`, `compose.runtime.yaml` | Inicio opcional de Compose, health checks y URL de preview |

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
-  ArrowLeft, ArrowRight, CircleCheck, FileText, Plug, Plus, ShieldAlert, Sparkles, Trash2, TriangleAlert,
+  ArrowLeft, ArrowRight, Building2, CircleCheck, FileText, LogOut, Plug, Plus, ShieldAlert, Sparkles, Trash2, TriangleAlert, UserRound,
 } from 'lucide-react'
-import { addProject, deleteProject, fecha, setSettings, useDB, type Project } from './store'
+import { addProject, deleteProject, fecha, setScope, setSettings, useDB, type Project } from './store'
 import { PREGUNTAS, render, specInicial } from './demo.js'
 import { Workspace } from './Workspace'
-import { connect, createSession, disconnect, getConnection, provisionProject, staticDemo, type Connection } from './api'
+import { addWorkspaceMember, connect, createSession, createWorkspace, disconnect, getConnection, getIdentity, login, logout, provisionProject, selectWorkspace, staticDemo, type Connection, type Identity } from './api'
 import { Estado, folio, Marca } from '@/components/marca'
 import { SelectorTema } from '@/components/tema'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -52,14 +52,33 @@ export function App() {
   const { projects } = useDB()
   const proyecto = ruta.match(/^\/p\/(\w+)/)?.[1]
   const [connection, setConnection] = useState<Connection | null>(null)
-  useEffect(() => {
-    getConnection().then(setConnection).catch(() => setConnection({ connected: false, available: false }))
-  }, [])
+  const [identity, setIdentity] = useState<Identity | null>(null)
+  async function refreshIdentity(next?: Identity) {
+    const value = next || await getIdentity()
+    setIdentity(value)
+    if (value.authenticated && value.user && value.workspace) {
+      setScope(`${value.user.id}.${value.workspace.id}`)
+      try { setConnection(await getConnection()) } catch { setConnection({ connected: false, available: false }) }
+    } else setConnection(null)
+  }
+  useEffect(() => { refreshIdentity().catch(() => setIdentity({ enabled: false, authenticated: true, workspaces: [] })) }, [])
   const activo = proyecto ? projects.find((p) => p.id === proyecto) : undefined
   const linked = !!connection?.connected && (!activo?.serverUrl || limpia(activo.serverUrl) === limpia(connection.url))
   const enRegistro = ruta === '/' || ruta.startsWith('/p/')
   const enTallerDemo = !!proyecto && activo?.mode !== 'live'
   const conBoton = !ruta.startsWith('/nuevo') && ruta !== '/'
+
+  if (!identity) return <PantallaCarga />
+  if (identity.enabled && !identity.authenticated) return <Acceso onLogin={refreshIdentity} />
+
+  async function cambiarEspacio(id: string) {
+    const current = identity as Identity
+    if (!id || id === current.workspace?.id) return
+    const result = await selectWorkspace(id)
+    await refreshIdentity({ ...current, workspace: result.workspace, workspaces: result.workspaces })
+    ir('/')
+  }
+  async function salirCuenta() { await logout(); setScope('local'); setIdentity({ enabled: true, authenticated: false, workspaces: [] }); setConnection(null); ir('/') }
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
@@ -74,7 +93,17 @@ export function App() {
             <Enlace href="#/config" activo={ruta === '/config'}>Configuración</Enlace>
           </nav>
           <span className="flex-1" />
+          {identity.enabled && identity.workspace && (
+            <label className="sr-only" htmlFor="espacio-activo">Espacio de trabajo</label>
+          )}
+          {identity.enabled && identity.workspace && (
+            <select id="espacio-activo" value={identity.workspace.id} onChange={(e) => cambiarEspacio(e.target.value).catch(() => undefined)}
+              className="bg-background hidden h-8 max-w-44 rounded-md border px-2 text-sm sm:block">
+              {identity.workspaces.map((workspace) => <option key={workspace.id} value={workspace.id}>{workspace.name}</option>)}
+            </select>
+          )}
           <SelectorTema />
+          {identity.enabled && <Button variant="ghost" size="icon" onClick={() => salirCuenta().catch(() => undefined)} aria-label="Cerrar sesión"><LogOut className="size-4" /></Button>}
           {conBoton && (
             <Button asChild size="sm" className="gap-1.5 max-sm:size-8 max-sm:p-0">
               <a href="#/nuevo" aria-label="Nuevo proyecto">
@@ -96,7 +125,7 @@ export function App() {
             ) : ruta.startsWith('/nuevo') ? (
               <Alta connection={connection} ejemplo={EJEMPLOS[new URLSearchParams(ruta.split('?')[1] || '').get('ejemplo') as keyof typeof EJEMPLOS]} />
             ) : ruta === '/config' ? (
-              <Configuracion connection={connection} onConnection={setConnection} />
+              <Configuracion connection={connection} onConnection={setConnection} identity={identity} onIdentity={refreshIdentity} />
             ) : (
               <Registro />
             )}
@@ -109,12 +138,39 @@ export function App() {
             <span className="font-mono">
               {connection?.connected ? `Conectado · ${limpia(connection.url)}` : 'Modo demostración · sin conexión'}
             </span>
-            <span className="max-sm:hidden">Los proyectos se guardan en este navegador</span>
+            <span className="max-sm:hidden">{identity.enabled ? `Espacio: ${identity.workspace?.name}` : 'Los proyectos se guardan en este navegador'}</span>
           </footer>
         )}
       </main>
     </div>
   )
+}
+
+function PantallaCarga() {
+  return <div className="flex h-dvh items-center justify-center text-muted-foreground text-sm">Abriendo OblivionUI…</div>
+}
+
+function Acceso({ onLogin }: { onLogin: (identity: Identity) => Promise<void> }) {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [workspaceName, setWorkspaceName] = useState('')
+  const [workspaceError, setWorkspaceError] = useState('')
+  const [memberName, setMemberName] = useState('')
+  const [memberEmail, setMemberEmail] = useState('')
+  const [memberPassword, setMemberPassword] = useState('')
+  const [memberRole, setMemberRole] = useState<'admin' | 'member'>('member')
+  const [memberResult, setMemberResult] = useState('')
+  const [error, setError] = useState('')
+  const [pending, setPending] = useState(false)
+  async function submit(event: React.FormEvent) {
+    event.preventDefault(); setPending(true); setError('')
+    try { await onLogin(await login(email, password)) } catch (cause) { setError((cause as Error).message) } finally { setPending(false) }
+  }
+  return <main className="bg-muted/20 flex min-h-dvh items-center justify-center p-4">
+    <Card className="w-full max-w-md"><CardHeader><Marca /><CardTitle className="mt-5 text-xl">Entra a tu espacio de trabajo</CardTitle><CardDescription>Usa la cuenta creada por la persona administradora.</CardDescription></CardHeader>
+      <CardContent><form className="space-y-5" onSubmit={submit}><div className="space-y-2"><Label htmlFor="correo">Correo</Label><Input id="correo" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></div><div className="space-y-2"><Label htmlFor="clave-cuenta">Contraseña</Label><Input id="clave-cuenta" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required /></div>{error && <Alert variant="destructive"><TriangleAlert className="size-4" /><AlertDescription>{error}</AlertDescription></Alert>}<Button className="w-full" disabled={pending}>{pending ? 'Entrando…' : 'Entrar'}</Button></form></CardContent>
+    </Card>
+  </main>
 }
 
 function Enlace({ href, activo, children }: { href: string; activo: boolean; children: React.ReactNode }) {
@@ -585,9 +641,11 @@ function Alta({ connection, ejemplo }: { connection: Connection | null; ejemplo?
   )
 }
 
-function Configuracion({ connection, onConnection }: {
+function Configuracion({ connection, onConnection, identity, onIdentity }: {
   connection: Connection | null
   onConnection: (value: Connection) => void
+  identity: Identity
+  onIdentity: (identity?: Identity) => Promise<void>
 }) {
   const { settings } = useDB()
   const [probando, setProbando] = useState(false)
@@ -595,6 +653,13 @@ function Configuracion({ connection, onConnection }: {
   const [accessKey, setAccessKey] = useState('')
   const [username, setUsername] = useState('opencode')
   const [password, setPassword] = useState('')
+  const [workspaceName, setWorkspaceName] = useState('')
+  const [workspaceError, setWorkspaceError] = useState('')
+  const [memberName, setMemberName] = useState('')
+  const [memberEmail, setMemberEmail] = useState('')
+  const [memberPassword, setMemberPassword] = useState('')
+  const [memberRole, setMemberRole] = useState<'admin' | 'member'>('member')
+  const [memberResult, setMemberResult] = useState('')
 
   async function probar() {
     setProbando(true)
@@ -629,6 +694,8 @@ function Configuracion({ connection, onConnection }: {
       </div>
 
       {staticDemo && <Alert className="mb-5"><Sparkles className="size-4" /><AlertDescription>Esta versión pública sirve para recorrer la demostración. La conexión con OpenCode se configura en una instalación propia.</AlertDescription></Alert>}
+
+      {identity.enabled && <Card className="mb-5"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><Building2 className="size-4" />Espacio de trabajo</CardTitle><CardDescription>{identity.workspace?.name} · rol: {identity.workspace?.role === 'owner' ? 'propietario' : identity.workspace?.role}</CardDescription></CardHeader><CardContent><form className="flex gap-3" onSubmit={async (event) => { event.preventDefault(); setWorkspaceError(''); try { const result = await createWorkspace(workspaceName); setWorkspaceName(''); await onIdentity({ ...identity, workspace: result.workspace, workspaces: result.workspaces }) } catch (cause) { setWorkspaceError((cause as Error).message) } }}><Input value={workspaceName} onChange={(event) => setWorkspaceName(event.target.value)} placeholder="Nuevo espacio, ej. Operaciones" /><Button type="submit" variant="outline">Crear</Button></form>{workspaceError && <p className="text-destructive mt-2 text-sm">{workspaceError}</p>}<p className="text-muted-foreground mt-3 text-xs">Los proyectos y la conexión se separan por espacio y por cuenta.</p>{identity.workspace?.role === 'owner' && <form className="mt-5 space-y-3 border-t pt-5" onSubmit={async (event) => { event.preventDefault(); setMemberResult(''); try { await addWorkspaceMember(identity.workspace!.id, { name: memberName, email: memberEmail, password: memberPassword, role: memberRole }); setMemberName(''); setMemberEmail(''); setMemberPassword(''); setMemberResult('Cuenta creada. Comparte el correo y la contraseña inicial de forma segura.') } catch (cause) { setMemberResult((cause as Error).message) } }}><p className="text-sm font-medium">Añadir integrante</p><div className="grid gap-3 sm:grid-cols-2"><Input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="Nombre" required /><Input type="email" value={memberEmail} onChange={(event) => setMemberEmail(event.target.value)} placeholder="correo@empresa.mx" required /></div><div className="flex gap-3"><Input type="password" autoComplete="new-password" minLength={12} value={memberPassword} onChange={(event) => setMemberPassword(event.target.value)} placeholder="Contraseña inicial (12 caracteres)" required /><select value={memberRole} onChange={(event) => setMemberRole(event.target.value as 'admin' | 'member')} className="bg-background rounded-md border px-2 text-sm"><option value="member">Integrante</option><option value="admin">Administrador</option></select><Button type="submit" variant="outline">Añadir</Button></div>{memberResult && <p className="text-muted-foreground text-xs">{memberResult}</p>}</form>}</CardContent></Card>}
 
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">

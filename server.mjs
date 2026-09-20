@@ -1,6 +1,7 @@
 import { createServer } from 'node:http'
 import { readFile, stat, unlink } from 'node:fs/promises'
 import { dirname, extname, join, resolve, sep } from 'node:path'
+import { createIdentity } from './identity.mjs'
 import { fileURLToPath } from 'node:url'
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { createOpenCode, OpenCodeError } from './opencode.mjs'
@@ -20,9 +21,17 @@ const mime = {
   '.woff2': 'font/woff2',
 }
 const connections = new Map()
+const authSessions = new Map()
+const identity = await createIdentity({
+  file: process.env.PAGOBLI_IDENTITY_FILE || join(dirname(fileURLToPath(import.meta.url)), '.data', 'identity.json'),
+  bootstrapEmail: process.env.PAGOBLI_ADMIN_EMAIL,
+  bootstrapPassword: process.env.PAGOBLI_ADMIN_PASSWORD,
+  bootstrapName: process.env.PAGOBLI_ADMIN_NAME || 'Administración',
+})
 const ttl = 12 * 60 * 60 * 1000
 setInterval(() => {
   for (const [token, connection] of connections) if (connection.expires < Date.now()) connections.delete(token)
+  for (const [token, session] of authSessions) if (session.expires < Date.now()) authSessions.delete(token)
 }, 5 * 60 * 1000).unref()
 
 function send(res, status, data) {
@@ -47,10 +56,23 @@ async function readJson(req) {
   try { return JSON.parse(raw || '{}') } catch { throw new OpenCodeError('JSON no válido.', 400) }
 }
 
-function connectionFor(req) {
-  const token = req.headers.cookie?.split(';').map((part) => part.trim()).find((part) => part.startsWith('pagobli_session='))?.slice('pagobli_session='.length)
+function cookie(req, name) {
+  return req.headers.cookie?.split(';').map((part) => part.trim()).find((part) => part.startsWith(`${name}=`))?.slice(name.length + 1)
+}
+
+function authFor(req) {
+  if (!identity.enabled) return { user: { id: 'legacy', name: 'Instalación local', email: '' }, workspace: { id: 'legacy', name: 'Instalación local', role: 'owner' } }
+  const token = cookie(req, 'pagobli_auth')
+  const session = authSessions.get(token)
+  if (!session || session.expires < Date.now()) { if (token) authSessions.delete(token); return null }
+  session.expires = Date.now() + ttl
+  return session
+}
+
+function connectionFor(req, actor) {
+  const token = cookie(req, 'pagobli_session')
   const connection = connections.get(token)
-  if (!connection || connection.expires < Date.now()) {
+  if (!connection || connection.expires < Date.now() || connection.userId !== actor.user.id || connection.workspaceId !== actor.workspace.id) {
     if (token) connections.delete(token)
     return null
   }
@@ -62,12 +84,53 @@ async function api(req, res, pathname) {
   if (req.method !== 'GET' && req.method !== 'POST') return send(res, 405, { error: 'Método no permitido.' })
   const origin = req.headers.origin
   if (origin && new URL(origin).host !== req.headers.host) return send(res, 403, { error: 'Origen no permitido.' })
+  if (pathname === '/api/auth/status' && req.method === 'GET') {
+    const actor = authFor(req)
+    return send(res, 200, { enabled: identity.enabled, authenticated: !!actor && (identity.enabled || actor.user.id === 'legacy'), user: actor?.user, workspace: actor?.workspace, workspaces: actor ? identity.enabled ? identity.listWorkspaces(actor.user.id) : [actor.workspace] : [] })
+  }
+  if (pathname === '/api/auth/login' && req.method === 'POST') {
+    if (!identity.enabled) return send(res, 409, { error: 'Las cuentas no están activadas en esta instalación.' })
+    const body = await readJson(req)
+    const result = await identity.login(body.email, body.password)
+    if (!result) return send(res, 401, { error: 'Correo o contraseña incorrectos.' })
+    const token = randomBytes(32).toString('hex')
+    const session = { user: result.user, workspace: result.workspace, expires: Date.now() + ttl }
+    authSessions.set(token, session)
+    res.setHeader('Set-Cookie', `pagobli_auth=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200${origin?.startsWith('https://') ? '; Secure' : ''}`)
+    return send(res, 200, { enabled: true, authenticated: true, user: result.user, workspace: result.workspace, workspaces: result.workspaces })
+  }
+  if (pathname === '/api/auth/logout' && req.method === 'POST') {
+    const token = cookie(req, 'pagobli_auth'); if (token) authSessions.delete(token)
+    res.setHeader('Set-Cookie', 'pagobli_auth=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0')
+    return send(res, 200, { authenticated: false })
+  }
+  const actor = authFor(req)
+  if (!actor) return send(res, 401, { error: 'Inicia sesión para continuar.' })
+  if (pathname === '/api/workspaces' && req.method === 'POST') {
+    const body = await readJson(req)
+    const workspace = await identity.createWorkspace(actor.user.id, body.name)
+    actor.workspace = workspace
+    return send(res, 201, { workspace, workspaces: identity.listWorkspaces(actor.user.id) })
+  }
+  const selectWorkspace = pathname.match(/^\/api\/workspaces\/([a-zA-Z0-9_-]+)\/select$/)
+  if (selectWorkspace && req.method === 'POST') {
+    const workspace = identity.workspaceFor(actor.user.id, selectWorkspace[1])
+    if (!workspace) return send(res, 403, { error: 'No tienes acceso a este espacio.' })
+    actor.workspace = workspace
+    return send(res, 200, { workspace, workspaces: identity.listWorkspaces(actor.user.id) })
+  }
+  const memberMatch = pathname.match(/^\/api\/workspaces\/([a-zA-Z0-9_-]+)\/members$/)
+  if (memberMatch && req.method === 'POST') {
+    const body = await readJson(req)
+    const member = await identity.addMember(actor.user.id, memberMatch[1], body)
+    return send(res, 201, { member })
+  }
   if (pathname === '/api/connection' && req.method === 'GET') {
-    const connection = connectionFor(req)
+    const connection = connectionFor(req, actor)
     const provisioning = await provisionAvailable(provisionConfig())
     const runtime = await runtimeAvailable(runtimeConfig())
     return send(res, 200, connection
-      ? { connected: true, url: connection.url, version: connection.version, directory: connection.directory, provisioning, runtime }
+      ? { connected: true, url: connection.url, version: connection.version, directory: connection.directory, provisioning, runtime, workspace: actor.workspace }
       : { connected: false, available: !!process.env.PAGOBLI_ACCESS_KEY, provisioning, runtime })
   }
   if (pathname === '/api/connect' && req.method === 'POST') {
@@ -79,11 +142,11 @@ async function api(req, res, pathname) {
     const oldToken = req.headers.cookie?.match(/(?:^|;\s*)pagobli_session=([^;]+)/)?.[1]
     if (oldToken) connections.delete(oldToken)
     const token = randomBytes(32).toString('hex')
-    connections.set(token, { client, url: body.url, version: status.version, directory: status.directory, expires: Date.now() + ttl })
+    connections.set(token, { client, url: body.url, version: status.version, directory: status.directory, userId: actor.user.id, workspaceId: actor.workspace.id, expires: Date.now() + ttl })
     res.setHeader('Set-Cookie', `pagobli_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200${origin?.startsWith('https://') ? '; Secure' : ''}`)
     return send(res, 200, { connected: true, url: body.url, ...status, provisioning: await provisionAvailable(provisionConfig()), runtime: await runtimeAvailable(runtimeConfig()) })
   }
-  const connection = connectionFor(req)
+  const connection = connectionFor(req, actor)
   if (!connection) return send(res, 401, { error: 'Conecta OpenCode desde Configuración para continuar.' })
   if (pathname === '/api/disconnect' && req.method === 'POST') {
     const token = req.headers.cookie?.match(/(?:^|;\s*)pagobli_session=([^;]+)/)?.[1]

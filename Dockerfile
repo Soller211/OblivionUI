@@ -4,7 +4,7 @@ COPY package*.json ./
 RUN npm ci
 COPY index.html tsconfig.json vite.config.ts ./
 COPY src ./src
-COPY opencode.mjs opencode.test.mjs provision.mjs provision.test.mjs runtime.mjs runtime.test.mjs server.mjs server.test.mjs ./
+COPY opencode.mjs opencode.test.mjs provision.mjs provision.test.mjs runtime.mjs runtime.test.mjs identity.mjs identity.test.mjs server.mjs server.test.mjs ./
 RUN npm run typecheck && npm test && npm run build
 
 FROM node:24-alpine
@@ -16,6 +16,9 @@ COPY --chown=node:node server.mjs ./server.mjs
 COPY --chown=node:node opencode.mjs ./opencode.mjs
 COPY --chown=node:node provision.mjs ./provision.mjs
 COPY --chown=node:node runtime.mjs ./runtime.mjs
+COPY --chown=node:node identity.mjs ./identity.mjs
+RUN mkdir /app/data && chown node:node /app/data
+ENV PAGOBLI_IDENTITY_FILE=/app/data/identity.json
 USER node
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD node -e "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"

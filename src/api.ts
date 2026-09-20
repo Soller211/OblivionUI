@@ -1,3 +1,7 @@
+export type Account = { id: string; name: string; email: string }
+export type WorkspaceAccount = { id: string; name: string; role: 'owner' | 'admin' | 'member' }
+export type Identity = { enabled: boolean; authenticated: boolean; user?: Account; workspace?: WorkspaceAccount; workspaces: WorkspaceAccount[] }
+
 export type Connection = { connected: boolean; available?: boolean; provisioning?: boolean; runtime?: boolean; url?: string; version?: string; directory?: string }
 export const staticDemo = import.meta.env.VITE_STATIC_DEMO === 'true'
 
@@ -11,6 +15,15 @@ async function call<T>(path: string, body?: object): Promise<T> {
   if (!response.ok) throw new Error(data.error || `La solicitud falló (${response.status}).`)
   return data as T
 }
+
+export const getIdentity = () => staticDemo
+  ? Promise.resolve<Identity>({ enabled: false, authenticated: true, user: { id: 'demo', name: 'Visitante', email: '' }, workspace: { id: 'demo', name: 'Demostración pública', role: 'owner' }, workspaces: [{ id: 'demo', name: 'Demostración pública', role: 'owner' }] })
+  : call<Identity>('/api/auth/status')
+export const login = (email: string, password: string) => call<Identity>('/api/auth/login', { email, password })
+export const logout = () => call<{ authenticated: false }>('/api/auth/logout', {})
+export const createWorkspace = (name: string) => call<{ workspace: WorkspaceAccount; workspaces: WorkspaceAccount[] }>('/api/workspaces', { name })
+export const selectWorkspace = (id: string) => call<{ workspace: WorkspaceAccount; workspaces: WorkspaceAccount[] }>(`/api/workspaces/${encodeURIComponent(id)}/select`, {})
+export const addWorkspaceMember = (workspaceId: string, input: { name: string; email: string; password: string; role: 'admin' | 'member' }) => call<{ member: Account }>(`/api/workspaces/${encodeURIComponent(workspaceId)}/members`, input)
 
 export const getConnection = () => staticDemo
   ? Promise.resolve<Connection>({ connected: false, available: false, provisioning: false, runtime: false })
