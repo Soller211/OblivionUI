@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+*.log
+playwright-report/
+test-results/
+.env
+workspaces/
+template-laravel/

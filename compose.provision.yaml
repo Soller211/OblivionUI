@@ -1,0 +1,9 @@
+services:
+  pagobli:
+    environment:
+      PAGOBLI_TEMPLATE_DIR: /templates/laravel
+      PAGOBLI_WORKSPACE_ROOT: /workspaces
+      PAGOBLI_OPENCODE_WORKSPACE_ROOT: ${PAGOBLI_OPENCODE_WORKSPACE_ROOT:-/workspaces}
+    volumes:
+      - ${PAGOBLI_TEMPLATE_HOST_DIR:?Define PAGOBLI_TEMPLATE_HOST_DIR}:/templates/laravel:ro
+      - ${PAGOBLI_WORKSPACE_HOST_DIR:?Define PAGOBLI_WORKSPACE_HOST_DIR}:/workspaces
