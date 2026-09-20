@@ -82,14 +82,15 @@ la cual lo ve OpenCode. PagObli copia la plantilla a una carpeta nueva, evita
 copiar `.env`, `vendor`, `node_modules` y `.git`, y comprueba por la API que
 OpenCode lee los mismos archivos antes de enviarle el proyecto. Si la
 comprobación falla, elimina la copia recién creada. Esta opción prepara archivos
-y sesión; todavía no levanta automáticamente un contenedor Laravel ni asigna
-una URL de vista previa.
+y sesión. Si agregas `compose.runtime.yaml`, también puede levantar el Compose de cada proyecto,
+esperar sus health checks y asignar una URL de vista previa. Consulta la configuración completa
+en [docs/EJECUCION_DE_PROYECTOS.md](docs/EJECUCION_DE_PROYECTOS.md).
 
 Esta conexión usa la API HTTP de OpenCode descrita en
 [su documentación](https://dev.opencode.ai/docs/server/). Es una base para
-instalaciones individuales. Aún faltan aprovisionamiento automático de
-contenedores Laravel, permisos por usuario, streaming de avances y persistencia
-compartida de proyectos. Si una versión de OpenCode no expone preguntas o
+instalaciones individuales. Aún faltan permisos por usuario, streaming de avances y persistencia
+compartida de proyectos. El inicio automático de contenedores requiere la configuración opcional
+descrita arriba y debe validarse con la plantilla Laravel de cada instalación. Si una versión de OpenCode no expone preguntas o
 permisos por su API, PagObli lo señala y esa decisión debe resolverse en
 OpenCode.
 
@@ -117,6 +118,7 @@ cuentas y una base de datos.
 - Historial de solicitudes reales con recuperación mediante OpenCode.
 - Ficha de contexto para proyectos reales, obtenida del contenedor con una lista cerrada de archivos.
 - Copia opcional de una plantilla Laravel en un volumen compartido.
+- Inicio opcional de Docker Compose por proyecto, con health check y URL de preview automática.
 - **Modo demostración** siempre visible en esta etapa: la vista previa la genera
   `src/demo.js`, no la IA. Cuando una petición no se entiende, se anota tal cual en lugar
   de fingir que se construyó. La idea inicial orienta la vista ilustrativa.
@@ -125,8 +127,7 @@ Los proyectos de demostración siguen separados de los proyectos conectados a Op
 
 ## Qué falta (etapas posteriores de NOTAS.md)
 
-Aprovisionamiento automático de contenedores Laravel, usuarios y permisos,
-edición visual sobre la vista previa, publicación y persistencia compartida.
+Usuarios y permisos, edición visual sobre la vista previa, publicación y persistencia compartida.
 
 ## Diseño
 
@@ -167,3 +168,4 @@ está documentado en [`DESIGN.md`](DESIGN.md). La verdad de producto está en
 | `server.mjs` | Backend de conexión, archivos estáticos y endpoint de salud |
 | `opencode.mjs`, `opencode.test.mjs` | Adaptador HTTP de OpenCode y pruebas unitarias |
 | `provision.mjs`, `compose.provision.yaml` | Copia opcional de plantillas en un volumen compartido |
+| `runtime.mjs`, `compose.runtime.yaml` | Inicio opcional de Compose, health checks y URL de preview |

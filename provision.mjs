@@ -1,4 +1,4 @@
-import { cp, mkdir, readdir, rm, stat, writeFile } from 'node:fs/promises'
+import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import { lstatSync } from 'node:fs'
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { randomBytes } from 'node:crypto'
@@ -72,4 +72,18 @@ export async function removeProvisionedProject(localDirectory, config) {
   const target = resolve(localDirectory)
   if (!target.startsWith(root + sep)) throw new Error('Ruta de proyecto inválida.')
   await rm(target, { recursive: true, force: true })
+}
+
+export async function updateProjectContext(localDirectory, patch) {
+  const contextFile = join(localDirectory, '.pagobli', 'context.json')
+  let current = {}
+  try {
+    const parsed = JSON.parse(await readFile(contextFile, 'utf8'))
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) current = parsed
+  } catch { /* se reemplaza un contexto inicial inválido por uno válido */ }
+  const features = patch.features && typeof patch.features === 'object'
+    ? { ...(current.features && typeof current.features === 'object' ? current.features : {}), ...patch.features }
+    : current.features
+  await mkdir(join(localDirectory, '.pagobli'), { recursive: true })
+  await writeFile(contextFile, `${JSON.stringify({ ...current, ...patch, ...(features ? { features } : {}) }, null, 2)}\n`, { mode: 0o600 })
 }

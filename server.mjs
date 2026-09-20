@@ -4,7 +4,8 @@ import { dirname, extname, join, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { createOpenCode, OpenCodeError } from './opencode.mjs'
-import { provisionAvailable, provisionConfig, provisionProject, removeProvisionedProject } from './provision.mjs'
+import { provisionAvailable, provisionConfig, provisionProject, removeProvisionedProject, updateProjectContext } from './provision.mjs'
+import { runtimeAvailable, runtimeConfig, startProjectRuntime, stopProjectRuntime } from './runtime.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), 'dist')
 const port = Number(process.env.PORT || 8080)
@@ -64,9 +65,10 @@ async function api(req, res, pathname) {
   if (pathname === '/api/connection' && req.method === 'GET') {
     const connection = connectionFor(req)
     const provisioning = await provisionAvailable(provisionConfig())
+    const runtime = await runtimeAvailable(runtimeConfig())
     return send(res, 200, connection
-      ? { connected: true, url: connection.url, version: connection.version, directory: connection.directory, provisioning }
-      : { connected: false, available: !!process.env.PAGOBLI_ACCESS_KEY, provisioning })
+      ? { connected: true, url: connection.url, version: connection.version, directory: connection.directory, provisioning, runtime }
+      : { connected: false, available: !!process.env.PAGOBLI_ACCESS_KEY, provisioning, runtime })
   }
   if (pathname === '/api/connect' && req.method === 'POST') {
     if (!process.env.PAGOBLI_ACCESS_KEY) return send(res, 503, { error: 'Esta instalación necesita PAGOBLI_ACCESS_KEY para activar OpenCode.' })
@@ -79,7 +81,7 @@ async function api(req, res, pathname) {
     const token = randomBytes(32).toString('hex')
     connections.set(token, { client, url: body.url, version: status.version, directory: status.directory, expires: Date.now() + ttl })
     res.setHeader('Set-Cookie', `pagobli_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200${origin?.startsWith('https://') ? '; Secure' : ''}`)
-    return send(res, 200, { connected: true, url: body.url, ...status, provisioning: await provisionAvailable(provisionConfig()) })
+    return send(res, 200, { connected: true, url: body.url, ...status, provisioning: await provisionAvailable(provisionConfig()), runtime: await runtimeAvailable(runtimeConfig()) })
   }
   const connection = connectionFor(req)
   if (!connection) return send(res, 401, { error: 'Conecta OpenCode desde Configuración para continuar.' })
@@ -100,6 +102,7 @@ async function api(req, res, pathname) {
     const body = await readJson(req)
     if (typeof body.title !== 'string' || !body.title.trim()) return send(res, 400, { error: 'Escribe un nombre para el proyecto.' })
     const config = provisionConfig()
+    const runtime = runtimeConfig()
     if (!(await provisionAvailable(config))) return send(res, 409, { error: 'La plantilla de proyectos no está configurada o está vacía.' })
     let project
     try { project = await provisionProject(body.title.trim(), config) }
@@ -107,9 +110,14 @@ async function api(req, res, pathname) {
     try {
       await connection.client.verifyWorkspace({ directory: project.directory, marker: project.marker })
       await unlink(join(project.localDirectory, '.pagobli-workspace-id'))
+      const started = await startProjectRuntime(project, runtime)
+      if (started.enabled) await updateProjectContext(project.localDirectory, {
+        status: started.status, previewUrl: started.previewUrl, features: { preview: true },
+      })
       const session = await connection.client.createSession({ title: body.title.trim(), directory: project.directory })
-      return send(res, 200, { ...session, provisioned: true })
+      return send(res, 200, { ...session, provisioned: true, runtime: started })
     } catch (error) {
+      await stopProjectRuntime(project, runtime)
       await removeProvisionedProject(project.localDirectory, config)
       throw error
     }

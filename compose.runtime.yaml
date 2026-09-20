@@ -1,0 +1,13 @@
+services:
+  pagobli:
+    environment:
+      # Habilita el ciclo de vida de aplicaciones generado desde la plantilla.
+      PAGOBLI_PROJECT_RUNTIME: docker-compose
+      PAGOBLI_PROJECT_COMPOSE_FILE: ${PAGOBLI_PROJECT_COMPOSE_FILE:-compose.yaml}
+      PAGOBLI_PROJECT_PREVIEW_URL_TEMPLATE: ${PAGOBLI_PROJECT_PREVIEW_URL_TEMPLATE:?Define una URL con {project}, por ejemplo https://{project}.apps.interna}
+      PAGOBLI_PROJECT_RUNTIME_TIMEOUT: ${PAGOBLI_PROJECT_RUNTIME_TIMEOUT:-120}
+    group_add:
+      - "${PAGOBLI_DOCKER_GID:?Define el grupo numérico del socket Docker}"
+    volumes:
+      # El backend usa Docker únicamente para el Compose que vive dentro de cada proyecto creado.
+      - /var/run/docker.sock:/var/run/docker.sock

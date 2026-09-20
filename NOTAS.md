@@ -53,7 +53,7 @@ El recorrido que debería validarse primero, una vez conectada la ejecución rea
 ## Etapas posteriores propuestas
 
 1. Verificar la API y las capacidades de la versión de OpenCode que use cada instalación; conectar sesiones, mensajes, eventos y preguntas.
-2. Automatizar creación y aislamiento de proyectos y sus contenedores, usando la base Laravel existente u otras plantillas configurables.
+2. ~~Automatizar creación y aislamiento de proyectos y sus contenedores, usando la base Laravel existente u otras plantillas configurables.~~ Implementado de forma opcional mediante Docker Compose: falta validarlo con la plantilla Laravel y el proxy real de cada instalación.
 3. Añadir preguntas guiadas, estados claros, comprobaciones y recuperación ante fallos.
 4. Implementar edición visual sobre componentes que permitan relacionar elementos de la vista previa con el código correspondiente.
 5. Incorporar usuarios y permisos, trabajo concurrente, versiones, revisión y publicación.
@@ -75,5 +75,5 @@ Implementado el primer alcance y la conexión real con OpenCode (React + TypeScr
 backend Node, Docker). La interfaz se llama ahora **OblivionUI** y está construida con
 Tailwind CSS v4, shadcn/ui y `motion`, con identidad morada y tema claro/oscuro que sigue al
 sistema. `PagObli` queda como nombre del repositorio y prefijo de las variables de entorno.
-Ver `README.md` y `PRODUCT.md`. Los datos de la aplicación siguen en el `localStorage` del
+Ver `README.md`, `PRODUCT.md` y `docs/EJECUCION_DE_PROYECTOS.md`. Los datos de la aplicación siguen en el `localStorage` del
 navegador; una instalación para varios usuarios necesitará cuentas y base de datos.

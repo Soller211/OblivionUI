@@ -62,6 +62,8 @@ Capacidades actuales, todas ya implementadas y que el rediseño debe preservar:
   espacio de trabajo. Se consulta por sondeo cada 2.5 s.
 - Configuración de administrador: clave de la instalación, URL de OpenCode, usuario y
   contraseña, aprovisionamiento desde plantilla o directorio existente, desconexión.
+- Con configuración opcional de runtime: al crear desde plantilla, inicia el Docker Compose del
+  proyecto, espera sus health checks y asigna la URL de vista previa calculada por la instalación.
 - Estados de avance en lenguaje comprensible y diferenciados por modo. La demostración solo
   indica que prepara o actualiza un ejemplo; no afirma que haya verificado código real.
 

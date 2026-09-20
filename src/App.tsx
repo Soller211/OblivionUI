@@ -399,13 +399,21 @@ function Alta({ connection, ejemplo }: { connection: Connection | null; ejemplo?
       if (live && !fromTemplate && projects.some((project) => project.mode === 'live' && project.directory === workspace && project.serverUrl === connection?.url)) {
         throw new Error('Ya tienes un proyecto vinculado a ese directorio de OpenCode. Abre ese proyecto o usa otro directorio.')
       }
-      const session = live ? fromTemplate ? await provisionProject(name.trim()) : await createSession(name.trim(), workspace) : null
+      let session: { id: string; directory: string } | null = null
+      let automaticPreview = ''
+      if (live) {
+        if (fromTemplate) {
+          const provisioned = await provisionProject(name.trim())
+          session = provisioned
+          automaticPreview = provisioned.runtime.previewUrl
+        } else session = await createSession(name.trim(), workspace)
+      }
       const p = addProject({
         name: name.trim(), idea: idea.trim(), answers, spec,
         html: live ? '' : render(spec), mode: live ? 'live' : 'demo',
         sessionID: session?.id, directory: session?.directory,
         serverUrl: live ? connection?.url : undefined,
-        previewUrl: live ? previewUrl.trim() : undefined,
+        previewUrl: live ? previewUrl.trim() || automaticPreview : undefined,
       })
       ir(`/p/${p.id}`)
     } catch (e) {
@@ -509,6 +517,13 @@ function Alta({ connection, ejemplo }: { connection: Connection | null; ejemplo?
                         </Label>
                       ))}
                     </RadioGroup>
+                  )}
+
+                  {!demo && connection.provisioning && connection.runtime && source === 'template' && (
+                    <Alert>
+                      <Sparkles className="size-4" />
+                      <AlertDescription>Al crear el proyecto, también se iniciará su aplicación y se preparará una vista previa.</AlertDescription>
+                    </Alert>
                   )}
 
                   {!demo && (

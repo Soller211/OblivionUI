@@ -1,4 +1,4 @@
-export type Connection = { connected: boolean; available?: boolean; provisioning?: boolean; url?: string; version?: string; directory?: string }
+export type Connection = { connected: boolean; available?: boolean; provisioning?: boolean; runtime?: boolean; url?: string; version?: string; directory?: string }
 
 async function call<T>(path: string, body?: object): Promise<T> {
   const response = await fetch(path, {
@@ -18,7 +18,7 @@ export const disconnect = () => call<Connection>('/api/disconnect', {})
 export const createSession = (title: string, directory: string) =>
   call<{ id: string; directory: string }>('/api/session', { title, directory })
 export const provisionProject = (title: string) =>
-  call<{ id: string; directory: string; provisioned: boolean }>('/api/provision', { title })
+  call<{ id: string; directory: string; provisioned: boolean; runtime: { enabled: boolean; status: string; previewUrl: string } }>('/api/provision', { title })
 export const sendPrompt = (sessionID: string, directory: string, text: string) =>
   call<{ answer: string }>(`/api/session/${encodeURIComponent(sessionID)}/message`, { directory, text })
 
