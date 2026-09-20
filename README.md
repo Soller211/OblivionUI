@@ -96,9 +96,12 @@ cuentas y una base de datos.
 ## Qué incluye hoy (primer alcance)
 
 - Lista de proyectos con folio, estado y último movimiento.
+- Pantalla inicial con ejemplos editables para comenzar un proyecto.
 - Alta en dos pasos: la idea, y un bloque de responsables (solicita / autoriza / datos).
-- Espacio de trabajo: conversación a la izquierda, vista previa a la derecha.
-- Estados comprensibles: Preparando → Aplicando cambios → Verificando → Listo para revisar.
+- Espacio de trabajo: conversación y vista previa, con paneles ajustables en escritorio y opción
+  para ampliar el resultado a pantalla completa.
+- Estados de la demostración diferenciados de los proyectos reales; una vista ilustrativa nunca
+  se presenta como aplicación verificada.
 - Historial de versiones: recuperar una versión crea una nueva entrada, conservando las anteriores.
 - Conexión real con una instancia propia de OpenCode mediante el backend.
 - Preguntas y permisos pendientes de OpenCode en el espacio de trabajo.

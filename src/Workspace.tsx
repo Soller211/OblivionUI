@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
-  CircleCheck, ExternalLink, History, Monitor, RotateCcw, SendHorizontal, Sparkles, TriangleAlert, Undo2,
+  ExternalLink, History, Maximize2, Minimize2, Monitor, RotateCcw, SendHorizontal, Sparkles, TriangleAlert, Undo2,
 } from 'lucide-react'
-import { ESTADOS, interpretar, render } from './demo.js'
+import { interpretar, render } from './demo.js'
 import { fecha, msg, pushMsg, restoreVersion, saveVersion, updateProject, useDB, type Project } from './store'
 import { ir } from './App'
 import {
@@ -39,6 +39,14 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
   const [historyError, setHistoryError] = useState('')
   const [historyBusy, setHistoryBusy] = useState(false)
   const [canUndoRestore, setCanUndoRestore] = useState(false)
+  const [chatWidth, setChatWidth] = useState(() => {
+    try {
+      const saved = Number(localStorage.getItem('oblivion-chat-width'))
+      return saved >= 25 && saved <= 55 ? saved : 34
+    } catch { return 34 }
+  })
+  const [fullscreen, setFullscreen] = useState(false)
+  const [fallbackFull, setFallbackFull] = useState(false)
   const safePreviewUrl = (() => {
     try {
       const url = new URL(p?.previewUrl || '')
@@ -46,6 +54,19 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
     } catch { return '' }
   })()
   const fin = useRef<HTMLDivElement>(null)
+  const layoutRef = useRef<HTMLDivElement>(null)
+  const previewRef = useRef<HTMLDivElement>(null)
+  const dragging = useRef(false)
+
+  useEffect(() => {
+    try { localStorage.setItem('oblivion-chat-width', String(chatWidth)) } catch { /* preferencia solo en memoria */ }
+  }, [chatWidth])
+  useEffect(() => {
+    const sync = () => setFullscreen(document.fullscreenElement === previewRef.current || fallbackFull)
+    document.addEventListener('fullscreenchange', sync)
+    sync()
+    return () => document.removeEventListener('fullscreenchange', sync)
+  }, [fallbackFull])
 
   useEffect(() => {
     if (!p) ir('/')
@@ -104,7 +125,7 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
   async function correr(peticion: string, inicial = false) {
     const proyecto = p as Project
     if (!inicial) pushMsg(proyecto.id, msg('user', peticion))
-    for (const e of ESTADOS.slice(0, -1)) {
+    for (const e of ['Preparando ejemplo', 'Actualizando vista']) {
       setEstado(e)
       await new Promise((r) => setTimeout(r, 700))
     }
@@ -186,13 +207,30 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
   const bloqueado = vive && !linked
   const retenidos = vive && linked && pending && (pending.permissions.length > 0 || pending.questions.length > 0 || !pending.supported)
 
+  function ajustarAncho(clientX: number) {
+    const rect = layoutRef.current?.getBoundingClientRect()
+    if (!rect) return
+    setChatWidth(Math.max(25, Math.min(55, Math.round((clientX - rect.left) / rect.width * 100))))
+  }
+
+  async function alternarPantallaCompleta() {
+    if (fallbackFull) { setFallbackFull(false); return }
+    if (document.fullscreenElement) { await document.exitFullscreen(); return }
+    try {
+      if (!previewRef.current?.requestFullscreen) throw new Error('Pantalla completa no disponible')
+      await previewRef.current.requestFullscreen()
+      if (!document.fullscreenElement) setFallbackFull(true)
+    } catch { setFallbackFull(true) }
+  }
+
   return (
-    <div className="mx-auto grid min-h-0 w-full max-w-[1600px] flex-1 gap-4 p-4 max-lg:grid-cols-1 lg:h-full lg:grid-cols-[minmax(340px,34%)_1fr]">
+    <div ref={layoutRef} style={{ '--chat-width': `${chatWidth}%` } as CSSProperties}
+      className="mx-auto grid min-h-0 w-full max-w-[1600px] flex-1 gap-4 p-4 max-lg:min-h-max max-lg:grid-cols-1 lg:h-full lg:gap-0 lg:grid-cols-[minmax(320px,var(--chat-width))_1rem_minmax(0,1fr)]">
       <Card className="flex min-h-0 flex-col gap-0 overflow-hidden py-0 max-lg:min-h-[32rem]">
         <header className="bg-muted/40 flex items-center gap-3 border-b px-4 py-3">
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-sm font-semibold">{p.name}</h1>
-            <p className="text-muted-foreground tabular font-mono text-[11px]">{folio(p.folio)}</p>
+            <p className="text-muted-foreground tabular font-mono text-xs">{folio(p.folio)}</p>
           </div>
           {vive
             ? <Estado tono="real">Proyecto real</Estado>
@@ -209,7 +247,7 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
             {estado && (
               <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 transition={suave} className="flex items-center gap-2.5">
-                <Estado tono={TONO_ESTADO[estado] || 'real'}>{estado}</Estado>
+                <Estado tono={vive ? TONO_ESTADO[estado] || 'real' : 'demo'}>{estado}</Estado>
                 <span className="flex gap-1" aria-hidden>
                   {[0, 1, 2].map((i) => (
                     <motion.span key={i} className="bg-primary/60 size-1.5 rounded-full"
@@ -269,9 +307,33 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
         </div>
       </Card>
 
-      <Card className="flex min-h-0 flex-col gap-0 overflow-hidden py-0 max-lg:min-h-[36rem]">
+      <div role="separator" aria-label="Ajustar ancho de la conversación" aria-orientation="vertical"
+        aria-valuemin={25} aria-valuemax={55} aria-valuenow={chatWidth} tabIndex={0}
+        className="group hidden cursor-col-resize items-center justify-center touch-none outline-none lg:flex"
+        onPointerDown={(e) => { dragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); ajustarAncho(e.clientX) }}
+        onPointerMove={(e) => { if (dragging.current) ajustarAncho(e.clientX) }}
+        onPointerUp={() => { dragging.current = false }}
+        onPointerCancel={() => { dragging.current = false }}
+        onDoubleClick={() => setChatWidth(34)}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            e.preventDefault()
+            setChatWidth((current) => Math.max(25, Math.min(55, current + (e.key === 'ArrowRight' ? 5 : -5))))
+          }
+        }}>
+        <span aria-hidden className="bg-border group-hover:bg-primary group-focus-visible:bg-primary h-16 w-1 rounded-full transition-colors" />
+      </div>
+
+      <Card ref={previewRef} className={cn('flex min-h-0 flex-col gap-0 overflow-hidden py-0 max-lg:min-h-[36rem]',
+        fallbackFull && 'fixed inset-0 z-50 !h-dvh !w-screen !min-h-0 !rounded-none')}>
         <header className="bg-muted/40 flex flex-wrap items-center gap-3 border-b px-4 py-2.5">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as 'previa' | 'historial')}>
+          <Tabs value={tab} onValueChange={(v) => {
+            setTab(v as 'previa' | 'historial')
+            if (v === 'historial') {
+              if (document.fullscreenElement) document.exitFullscreen()
+              setFallbackFull(false)
+            }
+          }}>
             <TabsList>
               <TabsTrigger value="previa" className="gap-1.5"><Monitor className="size-3.5" />Vista previa</TabsTrigger>
               <TabsTrigger value="historial" className="gap-1.5">
@@ -282,8 +344,15 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
           <span className="flex-1" />
           {!estado && !vive && (
             p.versions.length
-              ? <Estado tono="ok"><CircleCheck className="size-3" />Listo para revisar</Estado>
+              ? <Estado tono="demo"><Sparkles className="size-3" />Ejemplo listo para explorar</Estado>
               : <Estado tono="neutro">Sin versiones</Estado>
+          )}
+          {tab === 'previa' && (
+            <Button variant="ghost" size="sm" className="gap-1.5" onClick={alternarPantallaCompleta}
+              aria-label={fullscreen ? 'Salir de pantalla completa' : 'Ver vista previa a pantalla completa'}>
+              {fullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+              <span className="max-sm:hidden">{fullscreen ? 'Salir' : 'Ampliar'}</span>
+            </Button>
           )}
         </header>
 
@@ -293,7 +362,7 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
               <div className="space-y-2 border-b p-4">
                 <Label htmlFor="vista-url" className="text-xs">Dirección donde se ejecuta el proyecto</Label>
                 <div className="flex gap-2">
-                  <Input id="vista-url" type="url" value={previewInput} className="font-mono text-xs"
+                  <Input id="vista-url" type="url" value={previewInput} className="font-mono text-sm"
                     onChange={(e) => setPreviewInput(e.target.value)} placeholder="https://mi-proyecto.example.com" />
                   <Button variant="outline" size="sm" onClick={guardarVista}>Guardar</Button>
                   {safePreviewUrl && (
@@ -366,7 +435,7 @@ export function Workspace({ id, connection }: { id: string; connection: Connecti
                     <Version key={v.id} clave={`${folio(p.folio)}-${String(p.versions.length - i).padStart(2, '0')}`}
                       titulo={v.label} ts={v.ts}>
                       {actual
-                        ? <Estado tono="ok"><CircleCheck className="size-3" />Vigente</Estado>
+                        ? <Estado tono="demo"><Sparkles className="size-3" />Ejemplo actual</Estado>
                         : (
                           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => restaurar(v)}>
                             <RotateCcw className="size-3.5" />Recuperar
@@ -411,7 +480,7 @@ function Asiento({ rol, ts, error, apertura, children }: {
         {children}
       </div>
       <time dateTime={new Date(ts).toISOString()} title={fecha(ts)}
-        className="text-muted-foreground tabular px-1 font-mono text-[10px]">
+        className="text-muted-foreground tabular px-1 font-mono text-xs">
         {apertura ? `Alta · ${hora(ts)}` : hora(ts)}
       </time>
     </motion.div>
@@ -427,11 +496,11 @@ function Version({ clave, titulo, ts, children }: {
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={suave}
       className="hover:bg-accent/40 flex items-center gap-4 rounded-lg border p-3 transition-colors">
-      <span className="text-muted-foreground tabular shrink-0 font-mono text-[11px]">{clave}</span>
+      <span className="text-muted-foreground tabular shrink-0 font-mono text-xs">{clave}</span>
       <div className="min-w-0 flex-1">
         <p className="line-clamp-3 text-sm [overflow-wrap:anywhere]">{titulo}</p>
         {ts && (
-          <time dateTime={new Date(ts).toISOString()} className="text-muted-foreground tabular font-mono text-[10px]">
+          <time dateTime={new Date(ts).toISOString()} className="text-muted-foreground tabular font-mono text-xs">
             {fecha(ts)}
           </time>
         )}

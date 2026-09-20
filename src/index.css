@@ -171,4 +171,12 @@
   }
   *::-webkit-scrollbar-thumb:hover { background: color-mix(in oklch, var(--primary) 55%, var(--border)); background-clip: content-box; }
   .tabular { font-variant-numeric: tabular-nums; }
+  [data-slot="card"]:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--card);
+  }
 }

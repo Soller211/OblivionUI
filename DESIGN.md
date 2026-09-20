@@ -73,8 +73,8 @@ components:
     backgroundColor: "{colors.primary}"
     textColor: "{colors.primary-foreground}"
     rounded: "{rounded.lg}"
-    padding: "0 10px"
-    height: "32px"
+    padding: "0 12px"
+    height: "36px"
     typography: "{typography.label}"
   button-primary-hover:
     backgroundColor: "oklch(0.52 0.23 296 / 80%)"
@@ -82,13 +82,13 @@ components:
     backgroundColor: "{colors.background}"
     textColor: "{colors.foreground}"
     rounded: "{rounded.lg}"
-    padding: "0 10px"
-    height: "32px"
+    padding: "0 12px"
+    height: "36px"
   button-ghost:
     backgroundColor: "transparent"
     textColor: "{colors.muted-foreground}"
     rounded: "{rounded.lg}"
-    height: "32px"
+    height: "36px"
   card:
     backgroundColor: "{colors.card}"
     textColor: "{colors.foreground}"
@@ -98,8 +98,8 @@ components:
     backgroundColor: "transparent"
     textColor: "{colors.foreground}"
     rounded: "{rounded.lg}"
-    padding: "4px 10px"
-    height: "32px"
+    padding: "4px 12px"
+    height: "40px"
     typography: "{typography.body}"
   estado-real:
     backgroundColor: "oklch(0.52 0.23 296 / 10%)"
@@ -145,7 +145,7 @@ mundo es de convención bien ejecutada —superficies claras, un solo acento vio
 Geist, retícula estricta— y toda su expresividad se concentra en un punto: decirle a la persona,
 sin lenguaje técnico, en qué estado está el trabajo y si el sistema está esperando algo de ella.
 
-La densidad es de herramienta de trabajo, no de página de marketing: controles de 32px de alto,
+La densidad es de herramienta de trabajo, no de página de marketing: botones de 36px y campos de 40px,
 tarjetas con relleno de 16px, texto de cuerpo en 14px y cifras en mono tabular. La única luz del
 mundo es un resplandor radial violeta fijo detrás del contenido (una sola fuente, arriba al
 centro), que existe para que el violeta de marca se sienta presente sin repetirlo por toda la
@@ -257,7 +257,10 @@ El ritmo de espaciado es de 4px: 4, 8, 12, 16, 24, 40. Las separaciones internas
 **Puntos de quiebre.** 640px (`sm`): la tabla de proyectos se sustituye por una tarjeta por
 proyecto —nunca por una tabla recortada—, aparecen las frases de apoyo ocultas en móvil y el
 logotipo recupera su palabra. 1024px (`lg`): el espacio de trabajo pasa de una columna apilada a
-dos paneles, `minmax(340px, 34%)` para la conversación y el resto para vista previa e historial.
+dos paneles con un separador ajustable: la conversación empieza al 34% (mínimo 320px) y puede
+ocupar entre el 25% y el 55%; el resto se reserva a vista previa e historial. La vista previa
+también puede ampliarse a pantalla completa. En móvil los paneles se apilan y el área principal
+permite desplazarse entre ellos.
 1280px (`max-lg:hidden`): la columna «Último movimiento» de la tabla solo existe a partir de ahí.
 
 ## Elevation & Depth
@@ -289,18 +292,19 @@ Radio base 10px (`--radius: 0.625rem`) con una escala derivada por multiplicaci�
 es el único gesto de forma del producto. Las insignias de estado usan el radio de 26px sobre 20px de
 alto, es decir, píldora.
 
-Los bordes son siempre de 1px. La variante punteada (`border-dashed`) marca lo que todavía no
-existe: la tarjeta de estado vacío y la burbuja de apertura del expediente. Los iconos son SVG de
+Los bordes son siempre de 1px. La variante punteada (`border-dashed`) marca la burbuja de
+apertura del expediente. Los iconos son SVG de
 Lucide a 12, 14 o 16px, alineados al texto; el logotipo es un cuadrado de 28px con radio 8px, un
 degradado violeta y un anillo interrumpido en blanco —la «O» que se está construyendo.
 
 ## Components
 
-Los componentes son shadcn/ui sobre Radix, instalados con `npx shadcn@latest add <nombre>` y usados
-tal como se generan. El proyecto compone y aplica color semántico; no reescribe su CSS.
+Los componentes son shadcn/ui sobre Radix, instalados con `npx shadcn@latest add <nombre>`.
+El proyecto compone y aplica color semántico; ajusta el tamaño base de botones y campos para
+mejorar la lectura sin cambiar sus patrones de interacción.
 
 ### Buttons
-- **Shape:** esquinas suaves (10px), alto 32px por defecto, 28px en `size="sm"`, cuadrado de 32px
+- **Shape:** esquinas suaves (10px), alto 36px por defecto y en `size="sm"`, cuadrado de 36px
   en `size="icon"`.
 - **Primary:** violeta sólido con texto casi blanco, relleno horizontal de 10px y separación de 6px
   entre icono y texto. Es la única acción violeta de cada vista.
@@ -326,7 +330,7 @@ tal como se generan. El proyecto compone y aplica color semántico; no reescribe
 - **Internal Padding:** 16px (12px en barras de cabecera y en la bandeja de pendientes).
 
 ### Inputs / Fields
-- **Style:** fondo transparente, borde de 1px en `--input`, radio 10px, alto 32px; el área de texto
+- **Style:** fondo transparente, borde de 1px en `--input`, radio 10px, alto 40px; el área de texto
   crece de 80px a 160px y no se redimensiona a mano.
 - **Focus:** el borde toma `--ring` y aparece un anillo de 3px al 50%; el cursor es violeta.
 - **Error:** el mensaje va en rojo destructivo a 12px bajo el campo, con `role="alert"`.

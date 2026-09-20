@@ -8,8 +8,6 @@ export const PREGUNTAS = [
   { id: 'datos', label: '¿Qué datos se capturan?', ph: 'concepto, monto, fecha' },
 ]
 
-export const ESTADOS = ['Preparando', 'Aplicando cambios', 'Verificando', 'Listo para revisar']
-
 const COLORES = {
   azul: '#2563eb', verde: '#16a34a', rojo: '#dc2626', naranja: '#ea580c',
   morado: '#7c3aed', rosa: '#db2777', negro: '#111827', gris: '#4b5563', amarillo: '#ca8a04',
@@ -44,7 +42,7 @@ export function specInicial(nombre, respuestas = {}, idea = '') {
     titulo: nombre,
     idea,
     tipo: tipoDe(idea),
-    accent: COLORES.azul,
+    accent: COLORES.morado,
     campos: campos.length ? campos : ['Concepto', 'Monto'],
     solicita: respuestas.solicita || 'Solicitante',
     aprueba: respuestas.aprueba || 'Responsable de aprobar',
@@ -121,30 +119,36 @@ export function render(spec) {
 
   return `<!doctype html><html lang="es"><head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" /><style>
-:root{--a:${esc(spec.accent)}}
-*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,sans-serif;color:#111827;background:#f8fafc}
-header{background:var(--a);color:#fff;padding:18px 24px}header h1{margin:0;font-size:20px}
-header p{margin:4px 0 0;opacity:.85;font-size:13px}
-.idea{margin:0;color:#475569}.hint{font-size:12px;color:#64748b}
-main{padding:24px;display:grid;gap:20px;max-width:900px}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:20px}
-h2{margin:0 0 14px;font-size:16px}form{display:grid;gap:12px;grid-template-columns:1fr 1fr}
-label{display:grid;gap:5px;font-size:13px;color:#4b5563}
-input{padding:9px 10px;border:1px solid #d1d5db;border-radius:7px;font:inherit}
-button{background:var(--a);color:#fff;border:0;padding:10px 16px;border-radius:7px;font:inherit;cursor:pointer;justify-self:start}
-table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:9px;border-bottom:1px solid #eef2f7}
-th{font-size:12px;text-transform:uppercase;color:#6b7280}
-.e{padding:2px 9px;border-radius:999px;font-size:12px;background:#fef3c7;color:#92400e}
-.e.Aprobado{background:#dcfce7;color:#166534}.e.Rechazado{background:#fee2e2;color:#991b1b}
-.notas{border-left:3px solid var(--a);background:#fff;padding:14px 18px;border-radius:0 10px 10px 0}
+:root{--a:${esc(spec.accent)};--ink:#272235;--muted:#675f72;--border:#e9e3ef}
+*{box-sizing:border-box}body{margin:0;font:15px/1.55 system-ui,sans-serif;color:var(--ink);background:#faf9fc}
+header{background:#fff;border-top:4px solid var(--a);border-bottom:1px solid var(--border);padding:22px 28px}
+header h1{margin:0;font-size:23px;letter-spacing:-.025em;line-height:1.25}
+header p{margin:6px 0 0;color:var(--muted);font-size:13px}
+.eyebrow{display:block;margin-bottom:8px;color:var(--a);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+main{width:min(100%,1040px);margin:auto;padding:28px;display:grid;gap:18px}
+.intro{padding:0 2px}.idea{margin:0;color:var(--ink);font-size:15px}.hint{margin:7px 0 0;color:var(--muted);font-size:13px}
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:24px}
+h2{margin:0 0 18px;font-size:17px;letter-spacing:-.01em}form{display:grid;gap:16px;grid-template-columns:1fr 1fr}
+label{display:grid;gap:7px;font-size:13px;font-weight:600;color:#494054}
+input{min-width:0;height:40px;padding:9px 12px;border:1px solid #dcd4e5;border-radius:9px;background:#fff;font:inherit;font-weight:400}
+input:focus{outline:2px solid var(--a);outline-offset:1px}
+button{min-height:40px;background:color-mix(in srgb,var(--a) 50%,#241b35);color:#fff;border:0;padding:9px 16px;border-radius:9px;font:inherit;font-weight:600;cursor:pointer;justify-self:start}
+button:hover{filter:brightness(1.12)}button:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px;min-width:520px}
+th,td{text-align:left;padding:12px 10px;border-bottom:1px solid #eee9f2}tr:last-child td{border-bottom:0}
+th{font-size:12px;color:var(--muted);font-weight:600}
+.e{padding:4px 10px;border-radius:999px;font-size:12px;background:#fff3dc;color:#825500}
+.e.Aprobado{background:#e3f7ed;color:#126844}.e.Rechazado{background:#fde9e9;color:#9b3030}
+.notas{border-left:3px solid var(--a);background:#fff;padding:16px 20px;border-radius:0 10px 10px 0}
 .notas h3{margin:0 0 8px;font-size:14px}
+@media(max-width:600px){header{padding:18px 20px}main{padding:18px;gap:14px}.card{padding:18px}form{grid-template-columns:1fr}}
 </style></head><body>
-<header><h1>${esc(spec.titulo)}</h1><p>Prototipo de ${esc(tipo.lista.toLowerCase())} · Inicia: ${esc(spec.solicita)} · Revisa: ${esc(spec.aprueba)}</p></header>
+<header><span class="eyebrow">Vista de ejemplo</span><h1>${esc(spec.titulo)}</h1><p>${esc(tipo.lista)} · Inicia: ${esc(spec.solicita)} · Revisa: ${esc(spec.aprueba)}</p></header>
 <main>
-${spec.idea ? `<p class="idea">${esc(spec.idea)}</p>` : ''}
-<p class="hint">Vista ilustrativa. Estos datos y controles son de ejemplo.</p>
+<div class="intro">${spec.idea ? `<p class="idea">${esc(spec.idea)}</p>` : ''}
+<p class="hint">Vista ilustrativa. Estos datos y controles son de ejemplo.</p></div>
 <section class="card"><h2>${esc(tipo.nuevo)}</h2><form onsubmit="return false">${campos}<button>${esc(tipo.accion)}</button></form></section>
-<section class="card"><h2>${esc(tipo.lista)}</h2><table><thead><tr><th>Folio</th><th>Responsable</th><th>Detalle</th><th>Estado</th></tr></thead><tbody>${filas}</tbody></table></section>
+<section class="card"><h2>${esc(tipo.lista)}</h2><div class="table-wrap"><table><thead><tr><th>Folio</th><th>Responsable</th><th>Detalle</th><th>Estado</th></tr></thead><tbody>${filas}</tbody></table></div></section>
 ${notas}
 </main></body></html>`
 }

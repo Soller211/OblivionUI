@@ -53,14 +53,17 @@ Capacidades actuales, todas ya implementadas y que el rediseño debe preservar:
   real) y `live` (sesión real contra OpenCode). El modo debe ser siempre inequívoco.
 - Espacio de trabajo: conversación, vista previa (iframe de demo o URL real del proyecto) e
   historial. En `live` el historial permite volver al estado anterior a una solicitud y
-  deshacer esa recuperación.
+  deshacer esa recuperación. En escritorio se ajusta el ancho de los paneles y la vista previa
+  puede ampliarse a pantalla completa.
+- La pantalla inicial ofrece ejemplos que rellenan la idea y se pueden editar antes de crear
+  el proyecto. La demostración usa su propio estado visual: «Ejemplo listo para explorar».
 - Cola de pendientes: OpenCode solicita permisos (editar archivos, ejecutar comandos, salir
   del proyecto, red) y hace preguntas de opción múltiple; el usuario responde sin salir del
   espacio de trabajo. Se consulta por sondeo cada 2.5 s.
 - Configuración de administrador: clave de la instalación, URL de OpenCode, usuario y
   contraseña, aprovisionamiento desde plantilla o directorio existente, desconexión.
-- Estados de avance en lenguaje comprensible: Preparando, Aplicando cambios, Verificando,
-  Listo para revisar.
+- Estados de avance en lenguaje comprensible y diferenciados por modo. La demostración solo
+  indica que prepara o actualiza un ejemplo; no afirma que haya verificado código real.
 
 Restricciones técnicas:
 

@@ -97,7 +97,7 @@ function TarjetaPermiso({ sessionID, directory, permission, onResolved }: {
         </p>
       )}
       {typeof permission.metadata?.command === 'string' && (
-        <code className="bg-muted block rounded-md border p-2.5 font-mono text-[11px] leading-relaxed [overflow-wrap:anywhere]">
+        <code className="bg-muted block rounded-md border p-2.5 font-mono text-xs leading-relaxed [overflow-wrap:anywhere]">
           {permission.metadata.command}
         </code>
       )}

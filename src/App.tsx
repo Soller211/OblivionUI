@@ -41,6 +41,11 @@ export const ir = (ruta: string) => (location.hash = ruta)
 const limpia = (url?: string) => (url || '').replace(/\/$/, '')
 const entrada = { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -6 } }
 const suave = { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const }
+const EJEMPLOS = {
+  presupuestos: { nombre: 'Aprobación de presupuestos', idea: 'Necesito que cada área solicite presupuestos, un responsable los revise y podamos consultar su estado.' },
+  inventario: { nombre: 'Control de inventario', idea: 'Quiero registrar entradas y salidas de productos, saber qué hay disponible y recibir avisos cuando algo se agote.' },
+  vacaciones: { nombre: 'Solicitudes de vacaciones', idea: 'Necesito que el equipo solicite vacaciones, sus responsables las aprueben y todos puedan ver los días disponibles.' },
+} as const
 
 export function App() {
   const ruta = useHash()
@@ -54,7 +59,7 @@ export function App() {
   const linked = !!connection?.connected && (!activo?.serverUrl || limpia(activo.serverUrl) === limpia(connection.url))
   const enRegistro = ruta === '/' || ruta.startsWith('/p/')
   const enTallerDemo = !!proyecto && activo?.mode !== 'live'
-  const conBoton = ruta !== '/nuevo' && ruta !== '/'
+  const conBoton = !ruta.startsWith('/nuevo') && ruta !== '/'
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
@@ -82,14 +87,14 @@ export function App() {
 
       {!enTallerDemo && <BandaInstalacion activo={activo} connection={connection} linked={linked} />}
 
-      <main className={cn('flex min-h-0 flex-1 flex-col', proyecto ? 'overflow-hidden' : 'overflow-y-auto')}>
+      <main className={cn('flex min-h-0 flex-1 flex-col', proyecto ? 'overflow-y-auto lg:overflow-hidden' : 'overflow-y-auto')}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={proyecto || ruta} {...entrada} transition={suave}
-            className={cn('flex flex-col', proyecto && 'min-h-0 flex-1')}>
+            className={cn('flex flex-col', proyecto && 'min-h-0 flex-1 max-lg:min-h-max')}>
             {proyecto ? (
               <Workspace id={proyecto} connection={connection} />
-            ) : ruta === '/nuevo' ? (
-              <Alta connection={connection} />
+            ) : ruta.startsWith('/nuevo') ? (
+              <Alta connection={connection} ejemplo={EJEMPLOS[new URLSearchParams(ruta.split('?')[1] || '').get('ejemplo') as keyof typeof EJEMPLOS]} />
             ) : ruta === '/config' ? (
               <Configuracion connection={connection} onConnection={setConnection} />
             ) : (
@@ -195,28 +200,41 @@ function Registro() {
             Describe lo que necesitas y revisa el resultado sin tocar código.
           </p>
         </div>
-        <Button asChild className="gap-1.5 max-sm:w-full">
+        {projects.length > 0 && <Button asChild className="gap-1.5 max-sm:w-full">
           <a href="#/nuevo"><Plus className="size-4" />Nuevo proyecto</a>
-        </Button>
+        </Button>}
       </div>
 
       {projects.length === 0 ? (
         <motion.div {...entrada} transition={suave}>
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center gap-4 py-14 text-center">
-              <span className="bg-primary/10 text-primary rounded-xl p-3">
-                <FileText className="size-6" />
-              </span>
-              <div className="space-y-1.5">
-                <h2 className="font-medium">Todavía no hay proyectos</h2>
-                <p className="text-muted-foreground mx-auto max-w-sm text-sm text-pretty">
-                  Crea el primero describiendo con tus palabras el proceso que necesitas. Te hacemos tres
-                  preguntas y armamos una primera versión para revisar.
-                </p>
+          <Card className="overflow-hidden py-0">
+            <CardContent className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] lg:gap-12">
+              <div className="flex flex-col items-start justify-center gap-5">
+                <span className="bg-primary/10 text-primary rounded-xl p-3"><FileText className="size-6" /></span>
+                <div className="space-y-2">
+                  <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">Empieza con un proceso que hoy haces a mano</h2>
+                  <p className="text-muted-foreground max-w-md text-sm leading-relaxed text-pretty">
+                    Cuéntanos qué necesitas, responde tres preguntas y revisa una primera propuesta. Puedes pedir cambios después.
+                  </p>
+                </div>
+                <Button asChild className="gap-1.5">
+                  <a href="#/nuevo"><Plus className="size-4" />Crear un proyecto</a>
+                </Button>
               </div>
-              <Button asChild className="gap-1.5">
-                <a href="#/nuevo"><Plus className="size-4" />Crear el primero</a>
-              </Button>
+              <div className="space-y-3 lg:border-l lg:pl-8">
+                <p className="text-muted-foreground text-sm font-medium">O empieza con un ejemplo</p>
+                {Object.entries(EJEMPLOS).map(([id, ejemplo]) => (
+                  <a key={id} href={`#/nuevo?ejemplo=${id}`}
+                    className="hover:border-primary/40 hover:bg-accent/40 focus-visible:ring-ring/50 flex items-center gap-4 rounded-lg border p-4 transition-colors focus-visible:ring-[3px] focus-visible:outline-none">
+                    <span className="min-w-0 flex-1">
+                      <strong className="block text-sm font-medium">{ejemplo.nombre}</strong>
+                      <span className="text-muted-foreground mt-1 block text-sm leading-snug text-pretty">{ejemplo.idea}</span>
+                    </span>
+                    <ArrowRight className="text-muted-foreground size-4 shrink-0" />
+                  </a>
+                ))}
+                <p className="text-muted-foreground text-xs">Los ejemplos rellenan la idea; puedes cambiarla antes de crear el proyecto.</p>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -230,7 +248,7 @@ function Registro() {
                 <Card className="gap-0 py-0">
                   <div className="flex items-start gap-3 p-4">
                     <div className="min-w-0 flex-1 space-y-1">
-                      <span className="text-muted-foreground tabular font-mono text-[11px]">{folio(p.folio)}</span>
+                      <span className="text-muted-foreground tabular font-mono text-xs">{folio(p.folio)}</span>
                       <a href={`#/p/${p.id}`} className="block font-medium underline-offset-4 hover:underline">
                         {p.name}
                       </a>
@@ -245,7 +263,7 @@ function Registro() {
                     {p.mode === 'live'
                       ? <Estado tono="real"><Plug className="size-3" />Proyecto real</Estado>
                       : <Estado tono="demo"><Sparkles className="size-3" />Demostración</Estado>}
-                    <span className="text-muted-foreground tabular font-mono text-[11px]">
+                    <span className="text-muted-foreground tabular font-mono text-xs">
                       {p.versions.length} {p.versions.length === 1 ? 'versión' : 'versiones'} · {fecha(movimiento(p))}
                     </span>
                     <Button asChild variant="ghost" size="sm" className="ml-auto gap-1">
@@ -291,7 +309,7 @@ function Registro() {
                       {p.mode === 'live'
                         ? <Estado tono="real"><Plug className="size-3" />Proyecto real</Estado>
                         : <Estado tono="demo"><Sparkles className="size-3" />Demostración</Estado>}
-                      <span className="text-muted-foreground tabular font-mono text-[11px]">
+                      <span className="text-muted-foreground tabular font-mono text-xs">
                         {p.versions.length} {p.versions.length === 1 ? 'versión' : 'versiones'}
                       </span>
                     </div>
@@ -351,11 +369,11 @@ function Registro() {
 
 const ROL: Record<string, string> = { solicita: 'Solicita', aprueba: 'Autoriza', datos: 'Datos que se capturan' }
 
-function Alta({ connection }: { connection: Connection | null }) {
+function Alta({ connection, ejemplo }: { connection: Connection | null; ejemplo?: typeof EJEMPLOS[keyof typeof EJEMPLOS] }) {
   const { projects } = useDB()
   const [paso, setPaso] = useState(0)
-  const [name, setName] = useState('')
-  const [idea, setIdea] = useState('')
+  const [name, setName] = useState<string>(ejemplo?.nombre || '')
+  const [idea, setIdea] = useState<string>(ejemplo?.idea || '')
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [demo, setDemo] = useState(false)
   const [directory, setDirectory] = useState('')
@@ -407,7 +425,7 @@ function Alta({ connection }: { connection: Connection | null }) {
             transition={suave}
           />
         </span>
-        <Badge variant="secondary" className="tabular ml-auto font-mono text-[11px]">
+        <Badge variant="secondary" className="tabular ml-auto font-mono text-xs">
           {folio(siguienteFolio)} · por asignar
         </Badge>
       </div>
@@ -504,13 +522,13 @@ function Alta({ connection }: { connection: Connection | null }) {
                           <div className="space-y-2">
                             <Label htmlFor="dir">Directorio en el servidor de OpenCode</Label>
                             <Input id="dir" value={directory} onChange={(e) => setDirectory(e.target.value)}
-                              placeholder={connection.directory || '/ruta/del/proyecto'} className="font-mono text-xs" />
+                              placeholder={connection.directory || '/ruta/del/proyecto'} className="font-mono text-sm" />
                           </div>
                         )}
                         <div className="space-y-2">
                           <Label htmlFor="vista">URL de vista previa <span className="text-muted-foreground font-normal">(opcional)</span></Label>
                           <Input id="vista" type="url" value={previewUrl} onChange={(e) => setPreviewUrl(e.target.value)}
-                            placeholder="https://mi-proyecto.example.com" className="font-mono text-xs" />
+                            placeholder="https://mi-proyecto.example.com" className="font-mono text-sm" />
                           <p className="text-muted-foreground text-xs">
                             Dirección donde ya se ejecuta el proyecto, para verlo dentro de OblivionUI.
                           </p>
@@ -627,7 +645,7 @@ function Configuracion({ connection, onConnection }: {
 
           <div className="space-y-2">
             <Label htmlFor="url">Dirección del servidor</Label>
-            <Input id="url" value={settings.url} placeholder="http://192.168.1.10:4096" className="font-mono text-xs"
+            <Input id="url" value={settings.url} placeholder="http://192.168.1.10:4096" className="font-mono text-sm"
               onChange={(e) => setSettings({ url: e.target.value, serverReachable: false })} />
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
